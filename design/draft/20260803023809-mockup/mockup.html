@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Тестирование E2E - Поиск</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8e5;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#515f74",
+                        "tertiary": "#000000",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "surface-container-low": "#f2f4f6",
+                        "tertiary-container": "#001a42",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#d5e3fd",
+                        "on-surface-variant": "#45464d",
+                        "on-primary": "#ffffff",
+                        "surface": "#f7f9fb",
+                        "surface-variant": "#e0e3e5",
+                        "secondary-container": "#d5e3fd",
+                        "on-primary-container": "#7c839b",
+                        "inverse-primary": "#bec6e0",
+                        "outline-variant": "#c6c6cd",
+                        "on-tertiary-container": "#3980f4",
+                        "on-secondary-container": "#57657b",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e0e3e5",
+                        "primary-container": "#131b2e",
+                        "outline": "#76777d",
+                        "surface-container": "#eceef0",
+                        "primary": "#000000"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "md": "16px",
+                        "container-max": "1440px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "gutter": "20px"
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-surface border-b border-outline-variant docked full-width top-0 z-40 fixed w-full">
+<div class="flex items-center justify-between px-md w-full h-16">
+<div class="flex items-center gap-md">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined text-primary">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md text-primary">Тестирование E2E</h1>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined text-primary">search</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container text-sm">person</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Sidebar (NavigationDrawer) -->
+<aside class="hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] w-[280px] bg-surface shadow-md z-30 py-lg">
+<nav class="flex flex-col w-full">
+<div class="px-md pb-lg flex items-center gap-md">
+<div class="w-12 h-12 rounded-full bg-outline-variant overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional corporate headshot of a system administrator in a high-tech office setting. The lighting is soft and neutral, typical of a modern corporate minimalism aesthetic. The individual wears a clean dark navy sweater, looking focused and dependable. The background features blurred glass partitions and minimalist workstations in shades of white and slate grey." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3wXYOUvQWpl37I-KGYcGlr2mNNqR59h6llvaX_MqdgRAT2tBYMgYqmZbtjhI-Qn_KY_c1b4UdbC_MNzCg4JRCpP8z-13lR1sGS_62b4iFONW2jCX1IbYorJJvsmpp4OaD97Uw8G7nVaImKMirfMDzF8J4KtDSEW2NY4suIb58z8PW23gA4RLGA7riJwU6JMjid9a6Ft8EoDvqSSWFYKswFybKXTYNaZq81MAilOHTwuG8mXiYzkcUbQYJFpK9jcGyg8GfRu-eR14X"/>
+</div>
+<div>
+<p class="font-body-md font-bold text-on-surface">Александр Иванов</p>
+<p class="text-xs text-on-surface-variant">Администратор системы</p>
+</div>
+</div>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all duration-200" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span class="font-body-md">Панель управления</span>
+</a>
+<a class="flex items-center gap-md bg-secondary-container text-on-secondary-container border-l-4 border-tertiary-fixed-dim px-md py-sm transition-all duration-200" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-body-md font-bold">Все сценарии</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all duration-200" href="#">
+<span class="material-symbols-outlined">lock_person</span>
+<span class="font-body-md">Настройки доступа</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all duration-200" href="#">
+<span class="material-symbols-outlined">terminal</span>
+<span class="font-body-md">Логи системы</span>
+</a>
+<a class="flex items-center gap-md text-on-surface-variant px-md py-sm hover:bg-surface-container-high transition-all duration-200" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-body-md">Техподдержка</span>
+</a>
+</nav>
+<div class="mt-auto px-md text-xs text-on-surface-variant">
+            Версия 2.4.0
+        </div>
+</aside>
+<!-- Main Canvas -->
+<main class="mt-16 md:ml-[280px] flex-1 p-lg md:p-xl custom-scrollbar overflow-y-auto pb-24 md:pb-xl">
+<div class="max-w-container-max mx-auto">
+<!-- Search Header Section -->
+<div class="mb-xl">
+<h2 class="font-display-lg text-display-lg mb-md text-primary">Поиск сценариев</h2>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-md flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">search</span>
+</div>
+<input class="block w-full pl-12 pr-md py-4 bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-on-tertiary-container focus:border-on-tertiary-container transition-all font-body-lg text-on-surface shadow-sm" placeholder="Введите название теста или ID..." type="text" value="Авторизация"/>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="flex flex-wrap items-center gap-sm mb-lg">
+<span class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mr-sm">Фильтры:</span>
+<button class="flex items-center gap-xs px-md py-1.5 bg-tertiary text-white rounded-full transition-transform active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-sm">check</span>
+<span class="font-label-md">Smoke</span>
+</button>
+<button class="flex items-center gap-xs px-md py-1.5 bg-tertiary text-white rounded-full transition-transform active:scale-95 shadow-sm">
+<span class="material-symbols-outlined text-sm">check</span>
+<span class="font-label-md">Regression</span>
+</button>
+<button class="flex items-center gap-xs px-md py-1.5 bg-surface-container-high text-on-surface-variant border border-outline-variant rounded-full hover:bg-surface-variant transition-colors">
+<span class="font-label-md">API Tests</span>
+</button>
+<button class="flex items-center gap-xs px-md py-1.5 bg-surface-container-high text-on-surface-variant border border-outline-variant rounded-full hover:bg-surface-variant transition-colors">
+<span class="font-label-md">UI Tests</span>
+</button>
+<div class="h-6 w-px bg-outline-variant mx-xs"></div>
+<button class="text-on-tertiary-container font-label-md hover:underline">Сбросить все</button>
+</div>
+<!-- Search Results (Bento Grid Style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+<!-- Result Item 1: Active Focus -->
+<div class="bg-surface-container-lowest border-2 border-on-tertiary-container rounded-xl p-md shadow-lg transition-transform hover:scale-[1.01] relative overflow-hidden">
+<div class="absolute top-0 right-0 p-sm">
+<span class="px-2 py-1 bg-green-100 text-green-800 text-[10px] font-bold rounded uppercase tracking-tighter">Активно</span>
+</div>
+<div class="flex items-start gap-md mb-md">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white">
+<span class="material-symbols-outlined">login</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-primary mb-1 leading-tight">Авторизация: Валидные данные</h3>
+<p class="text-xs text-outline font-mono">ID: TC-4421</p>
+</div>
+</div>
+<p class="font-body-md text-on-surface-variant mb-lg line-clamp-2">Проверка входа в систему под учетной записью администратора с корректным логином и паролем.</p>
+<div class="flex items-center justify-between border-t border-outline-variant pt-md">
+<div class="flex gap-xs">
+<span class="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-medium rounded">Smoke</span>
+<span class="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-medium rounded">UI</span>
+</div>
+<button class="text-on-tertiary-container flex items-center gap-xs hover:gap-sm transition-all group">
+<span class="text-label-md font-bold">ЗАПУСТИТЬ</span>
+<span class="material-symbols-outlined text-sm">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Result Item 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md hover:shadow-md transition-all">
+<div class="flex items-start gap-md mb-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">no_accounts</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-primary mb-1 leading-tight">Авторизация: Неверный пароль</h3>
+<p class="text-xs text-outline font-mono">ID: TC-4422</p>
+</div>
+</div>
+<p class="font-body-md text-on-surface-variant mb-lg line-clamp-2">Валидация системных сообщений об ошибке при вводе некорректных учетных данных пользователем.</p>
+<div class="flex items-center justify-between border-t border-outline-variant pt-md">
+<div class="flex gap-xs">
+<span class="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-medium rounded">Regression</span>
+</div>
+<button class="text-on-surface-variant flex items-center gap-xs hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">settings</span>
+<span class="text-label-md">РЕДАКТИРОВАТЬ</span>
+</button>
+</div>
+</div>
+<!-- Result Item 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md hover:shadow-md transition-all">
+<div class="flex items-start gap-md mb-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">find_replace</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-primary mb-1 leading-tight">Авторизация: 2FA поток</h3>
+<p class="text-xs text-outline font-mono">ID: TC-4425</p>
+</div>
+</div>
+<p class="font-body-md text-on-surface-variant mb-lg line-clamp-2">Проверка получения и ввода одноразового кода подтверждения через SMS или приложение.</p>
+<div class="flex items-center justify-between border-t border-outline-variant pt-md">
+<div class="flex gap-xs">
+<span class="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-medium rounded">Regression</span>
+<span class="px-2 py-0.5 bg-surface-container text-on-surface-variant text-[10px] font-medium rounded">Security</span>
+</div>
+<button class="text-on-surface-variant flex items-center gap-xs hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">history</span>
+<span class="text-label-md">ИСТОРИЯ</span>
+</button>
+</div>
+</div>
+<!-- Result Item 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md hover:shadow-md transition-all md:col-span-2">
+<div class="flex flex-col md:flex-row md:items-center gap-md">
+<div class="w-12 h-12 shrink-0 rounded-lg bg-error-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined">report_gmailerrorred</span>
+</div>
+<div class="flex-1">
+<h3 class="font-headline-sm text-headline-sm text-primary mb-1 leading-tight">Авторизация через OAuth2 (Google/GitHub)</h3>
+<p class="font-body-md text-on-surface-variant line-clamp-1">Интеграционное тестирование сторонних провайдеров идентификации с проверкой редиректов.</p>
+</div>
+<div class="flex gap-md items-center mt-2 md:mt-0">
+<div class="text-right">
+<p class="text-[10px] font-bold text-outline uppercase">Последний статус</p>
+<p class="text-sm font-bold text-error">FAILED (2.4.0)</p>
+</div>
+<button class="p-3 bg-surface-container rounded-lg hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined">analytics</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Empty State Suggestion / Stats -->
+<div class="bg-secondary-fixed border border-outline-variant rounded-xl p-md flex flex-col justify-center items-center text-center">
+<span class="material-symbols-outlined text-on-secondary-fixed-variant mb-2" style="font-size: 32px;">info</span>
+<p class="font-body-md text-on-secondary-fixed mb-sm">Найдено 14 сценариев по вашему запросу</p>
+<button class="px-md py-2 bg-on-secondary-fixed-variant text-white rounded-lg text-label-md font-bold uppercase hover:opacity-90">Скачать отчет PDF</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full flex justify-around items-center h-20 bg-surface-container-highest border-t border-outline-variant z-50 pb-safe px-sm">
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 transition-transform duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-label-md mt-1">Главная</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 transition-transform duration-150 scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">science</span>
+<span class="text-[10px] font-label-md mt-1">Тесты</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 transition-transform duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-[10px] font-label-md mt-1">Отчеты</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 transition-transform duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-label-md mt-1">Профиль</span>
+</a>
+</nav>
+<!-- Floating Action Button (Only on main screen) -->
+<button class="fixed bottom-24 right-md md:bottom-xl md:right-xl w-14 h-14 bg-tertiary text-white rounded-2xl shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 group z-40">
+<span class="material-symbols-outlined">add</span>
+<span class="absolute right-full mr-4 bg-primary text-white px-3 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Новый тест</span>
+</button>
+<script>
+        // Simple micro-interaction for filter chips
+        document.querySelectorAll('button.rounded-full').forEach(chip => {
+            chip.addEventListener('click', function() {
+                if (!this.classList.contains('bg-tertiary')) {
+                    this.classList.replace('bg-surface-container-high', 'bg-tertiary');
+                    this.classList.replace('text-on-surface-variant', 'text-white');
+                    const icon = document.createElement('span');
+                    icon.className = 'material-symbols-outlined text-sm';
+                    icon.innerText = 'check';
+                    this.prepend(icon);
+                } else {
+                    this.classList.replace('bg-tertiary', 'bg-surface-container-high');
+                    this.classList.replace('text-white', 'text-on-surface-variant');
+                    const icon = this.querySelector('.material-symbols-outlined');
+                    if (icon) icon.remove();
+                }
+            });
+        });
+    </script>
+</body></html>
