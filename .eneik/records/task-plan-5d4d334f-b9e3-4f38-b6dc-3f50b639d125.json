@@ -1,0 +1,44 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "32901e1d-d8d3-4364-a840-03a32efc3324",
+      "sixSigmaMetric": "Decrease deliverable readiness calculation defect rate from 1 to 0",
+      "tocConstraintRef": "Project stagnation reporting accuracy",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: The deliverable readiness ratio must correctly incorporate resolved items so that the metric reflects actual project progress rather than stagnating at ~67%."
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch deliverable readiness calculation logic",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the calculation patch for this epic, I want to accurately compute the readiness ratio from existing item states, so that the deliverable readiness stagnation bug is resolved.",
+          "acceptanceCriteria": "Given a set of deliverables with known resolved states\nWhen the readiness ratio is computed\nThen it accurately returns the proportion of resolved items to total items",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Backend metric calculation logic",
+          "sixSigmaMetric": "Reduce metric calculation defects from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "Verify deliverable readiness calculation patch",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing QA for this epic, I want to test the patched readiness logic with unit and integration tests, so that the true progress is tracked without regressions.",
+          "acceptanceCriteria": "Given the patched readiness calculation logic\nWhen executed against datasets with varying resolved item counts in integration tests\nThen it accurately computes the ratio and clears the stagnation warning state",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Test coverage for metric calculation",
+          "sixSigmaMetric": "Increase test coverage for readiness calculation from 0% to 100%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
