@@ -52,6 +52,29 @@ public class DocumentControllerTest {
     }
 
     @Test
+    public void testUploadDocumentEmptyNameRejected() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "fgos_test.pdf",
+                "application/pdf",
+                "Mock PDF content".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/v1/documents")
+                        .file(file)
+                        .param("name", "   ") // empty name
+                        .param("description", "Учебные материалы по ФГОС")
+                        .param("doc_type", "Regulations")
+                        .param("specialty", "Epidemiology")
+                        .param("edu_level", "Residency")
+                        .param("category_id", "edu_center_root")
+                        .param("tags", "ординатура", "нормативные акты")
+                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("BAD_REQUEST"));
+    }
+
+    @Test
     public void testUploadDocumentSuccessAndAuditLogged() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
                 "file",
