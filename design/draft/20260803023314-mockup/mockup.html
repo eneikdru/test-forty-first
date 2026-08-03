@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lexicon Flux - Initializing</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&amp;family=Hanken+Grotesk:wght@400;500&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.6; transform: scale(1); filter: blur(20px) brightness(1); }
+            50% { opacity: 1; transform: scale(1.1); filter: blur(35px) brightness(1.3); }
+        }
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        @keyframes text-flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+            20%, 22%, 24%, 55% { opacity: 0.4; }
+        }
+        @keyframes orbit {
+            from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+            to { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+        }
+        .animate-pulse-glow { animation: pulse-glow 4s ease-in-out infinite; }
+        .animate-scanline { animation: scanline 8s linear infinite; }
+        .animate-flicker { animation: text-flicker 3s infinite; }
+        
+        .grid-bg {
+            background-image: linear-gradient(rgba(0, 219, 233, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 219, 233, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .glass-border {
+            border: 1px solid rgba(0, 219, 233, 0.2);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#00dbe9",
+                        "on-secondary-fixed": "#320047",
+                        "surface-variant": "#353437",
+                        "surface": "#131315",
+                        "on-background": "#e5e1e4",
+                        "on-tertiary": "#283500",
+                        "secondary-fixed-dim": "#ecb2ff",
+                        "on-primary-fixed": "#002022",
+                        "primary-fixed-dim": "#00dbe9",
+                        "on-secondary-container": "#480063",
+                        "tertiary-container": "#bbea00",
+                        "on-tertiary-container": "#506600",
+                        "primary-container": "#00f0ff",
+                        "inverse-on-surface": "#313032",
+                        "background": "#131315",
+                        "primary": "#dbfcff",
+                        "on-primary-fixed-variant": "#004f54",
+                        "error": "#ffb4ab",
+                        "surface-container-high": "#2a2a2c",
+                        "on-error": "#690005",
+                        "outline-variant": "#3b494b",
+                        "on-secondary-fixed-variant": "#74009f",
+                        "tertiary-fixed": "#c3f400",
+                        "tertiary": "#e9ffa8",
+                        "on-error-container": "#ffdad6",
+                        "surface-container": "#201f21",
+                        "outline": "#849495",
+                        "surface-container-low": "#1c1b1d",
+                        "tertiary-fixed-dim": "#abd600",
+                        "secondary": "#ecb2ff",
+                        "secondary-fixed": "#f8d8ff",
+                        "on-tertiary-fixed": "#161e00",
+                        "surface-dim": "#131315",
+                        "secondary-container": "#cf5cff",
+                        "surface-bright": "#39393b",
+                        "on-secondary": "#520071",
+                        "inverse-primary": "#006970",
+                        "inverse-surface": "#e5e1e4",
+                        "on-primary": "#00363a",
+                        "error-container": "#93000a",
+                        "surface-container-lowest": "#0e0e10",
+                        "on-surface-variant": "#b9cacb",
+                        "on-surface": "#e5e1e4",
+                        "surface-container-highest": "#353437",
+                        "primary-fixed": "#7df4ff",
+                        "on-primary-container": "#006970",
+                        "on-tertiary-fixed-variant": "#3c4d00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "gutter": "24px",
+                        "margin-desktop": "64px",
+                        "margin-mobile": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Sora"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Sora"],
+                        "label-caps": ["Sora"],
+                        "body-md": ["Hanken Grotesk"],
+                        "display-lg": ["Sora"],
+                        "label-mono": ["JetBrains Mono"],
+                        "headline-md": ["Sora"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["32px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "800"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-lg": ["72px", {"lineHeight": "80px", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                        "label-mono": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface overflow-hidden h-screen w-screen flex flex-col items-center justify-center">
+<!-- Background Layers -->
+<div class="fixed inset-0 z-0">
+<!-- Radial Core Glow -->
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,219,233,0.15)_0%,transparent_70%)]"></div>
+<!-- Grid System -->
+<div class="absolute inset-0 grid-bg opacity-20"></div>
+<!-- Moving Scanline -->
+<div class="absolute inset-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-fixed-dim/20 to-transparent animate-scanline"></div>
+<!-- Atmosphere Shader Placeholder -->
+
+</div>
+<!-- Main Content Shell -->
+<main class="relative z-10 flex flex-col items-center justify-center w-full px-margin-mobile md:px-margin-desktop">
+<!-- Logo Container -->
+<div class="relative group">
+<!-- Back Glow Pulse -->
+<div class="absolute inset-0 bg-primary-fixed-dim/40 rounded-full blur-[80px] animate-pulse-glow"></div>
+<!-- Logo Branding (LEXICON FLUX) -->
+<div class="relative flex flex-col items-center space-y-4">
+<div class="flex items-center justify-center p-8 rounded-full bg-white/5 backdrop-blur-xl glass-border shadow-[0_0_50px_rgba(0,219,233,0.3)] transition-all duration-700 hover:shadow-[0_0_80px_rgba(0,219,233,0.5)]">
+<span class="material-symbols-outlined text-[120px] md:text-[160px] text-primary-fixed-dim drop-shadow-[0_0_15px_rgba(0,219,233,0.8)]" style="font-variation-settings: 'FILL' 1;">
+                        terminal
+                    </span>
+</div>
+<!-- Brand Headline -->
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-primary-fixed-dim tracking-tighter drop-shadow-[0_0_20px_rgba(0,219,233,0.6)]">
+                    LEXICON FLUX
+                </h1>
+</div>
+<!-- Orbiting Data Nodes (Decorative) -->
+<div class="hidden md:block absolute inset-0 -z-10">
+<div class="w-2 h-2 rounded-full bg-primary-fixed-dim absolute animate-[orbit_10s_linear_infinite]"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim absolute animate-[orbit_15s_linear_infinite_reverse]"></div>
+</div>
+</div>
+</main>
+<!-- Footer Initialization Info -->
+<footer class="fixed bottom-12 w-full flex flex-col items-center space-y-6 px-margin-mobile">
+<!-- Progress Bar (Thin Precision Line) -->
+<div class="w-64 md:w-80 h-[2px] bg-white/10 relative overflow-hidden rounded-full">
+<div class="absolute top-0 left-0 h-full bg-primary-fixed-dim shadow-[0_0_8px_rgba(0,219,233,1)] transition-all duration-300 ease-out" id="progress-bar" style="width: 0%"></div>
+</div>
+<!-- Terminal Status Text -->
+<div class="flex flex-col items-center space-y-1">
+<p class="font-label-mono text-label-mono text-primary-fixed-dim animate-flicker">
+                INITIALIZING LINK...
+            </p>
+<div class="font-label-mono text-[10px] text-outline opacity-50 uppercase tracking-widest h-4 overflow-hidden" id="status-line">
+<!-- Dynamic text injected by JS -->
+                CONNECTING_TO_NEURAL_SERVER...
+            </div>
+</div>
+</footer>
+<!-- Micro-interactions Script -->
+<script>
+        const progressBar = document.getElementById('progress-bar');
+        const statusLine = document.getElementById('status-line');
+        
+        const statuses = [
+            "CONNECTING_TO_NEURAL_SERVER...",
+            "DECRYPTING_PACKETS...",
+            "ESTABLISHING_HANDSHAKE...",
+            "SYNCING_LOCAL_BUFFER...",
+            "CALIBRATING_FLUX_CAPACITANCE...",
+            "AUTHORIZING_OPERATOR_01...",
+            "LINK_ESTABLISHED"
+        ];
+
+        let progress = 0;
+        let statusIndex = 0;
+
+        function updateLoader() {
+            if (progress < 100) {
+                // Random incremental jumps for realistic loading feel
+                progress += Math.random() * 2;
+                if (progress > 100) progress = 100;
+                
+                progressBar.style.width = `${progress}%`;
+
+                // Update status text based on progress thresholds
+                const targetStatusIndex = Math.floor((progress / 100) * (statuses.length - 1));
+                if (targetStatusIndex !== statusIndex) {
+                    statusIndex = targetStatusIndex;
+                    statusLine.textContent = statuses[statusIndex];
+                    
+                    // Simple glitch effect on change
+                    statusLine.classList.add('opacity-100');
+                    setTimeout(() => statusLine.classList.remove('opacity-100'), 50);
+                }
+
+                requestAnimationFrame(updateLoader);
+            } else {
+                // On complete: subtle pulse and wait
+                progressBar.classList.add('brightness-150');
+                statusLine.textContent = "READY FOR UPLINK";
+                statusLine.classList.add('text-primary-fixed-dim', 'opacity-100');
+            }
+        }
+
+        // Start loading after initial atmospheric pause
+        setTimeout(updateLoader, 800);
+    </script>
+</body></html>
