@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Document Rules | Moodle QA Shield</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .rule-card-hover:hover {
+            border-color: #0052cc !important;
+            transition: border-color 0.2s ease-in-out;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container": "#e7eeff",
+                      "on-background": "#091c35",
+                      "primary-container": "#0052cc",
+                      "primary-fixed": "#dae2ff",
+                      "primary-fixed-dim": "#b2c5ff",
+                      "on-primary": "#ffffff",
+                      "on-primary-fixed-variant": "#0040a2",
+                      "on-error": "#ffffff",
+                      "inverse-on-surface": "#ecf0ff",
+                      "on-tertiary-fixed-variant": "#624000",
+                      "tertiary-fixed-dim": "#ffb950",
+                      "tertiary": "#5e3c00",
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-fixed": "#002113",
+                      "surface-dim": "#cadbfc",
+                      "surface-container-highest": "#d6e3ff",
+                      "on-tertiary-fixed": "#291800",
+                      "on-error-container": "#93000a",
+                      "secondary-container": "#82f9be",
+                      "primary": "#003d9b",
+                      "error-container": "#ffdad6",
+                      "inverse-surface": "#20314b",
+                      "on-primary-container": "#c4d2ff",
+                      "surface-tint": "#0c56d0",
+                      "surface-container-high": "#dfe8ff",
+                      "outline": "#737685",
+                      "secondary": "#006c47",
+                      "surface-variant": "#d6e3ff",
+                      "secondary-fixed": "#82f9be",
+                      "tertiary-fixed": "#ffddb3",
+                      "on-secondary": "#ffffff",
+                      "surface": "#f9f9ff",
+                      "secondary-fixed-dim": "#65dca4",
+                      "on-tertiary": "#ffffff",
+                      "surface-bright": "#f9f9ff",
+                      "on-secondary-fixed-variant": "#005235",
+                      "on-tertiary-container": "#ffca81",
+                      "background": "#f9f9ff",
+                      "on-secondary-container": "#00734c",
+                      "error": "#ba1a1a",
+                      "on-surface-variant": "#434654",
+                      "on-primary-fixed": "#001848",
+                      "outline-variant": "#c3c6d6",
+                      "on-surface": "#091c35",
+                      "inverse-primary": "#b2c5ff",
+                      "tertiary-container": "#7d5200",
+                      "surface-container-low": "#f0f3ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "sm": "8px",
+                      "margin-mobile": "16px",
+                      "lg": "24px",
+                      "xl": "32px",
+                      "base": "4px",
+                      "gutter": "12px",
+                      "md": "16px",
+                      "xs": "4px"
+              },
+              "fontFamily": {
+                      "code-sm": ["monospace"],
+                      "headline-lg-mobile": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "body-md": ["Inter"],
+                      "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "code-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen pb-24 lg:pb-0">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-50 flex justify-between items-center w-full px-md bg-surface dark:bg-surface-container border-b border-outline-variant dark:border-outline h-16">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed">security</span>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Moodle QA Shield</h1>
+</div>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-colors">search</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-high p-2 rounded-full transition-colors">settings</button>
+</div>
+</header>
+<div class="flex">
+<!-- NavigationDrawer (Desktop) -->
+<aside class="hidden lg:flex flex-col h-[calc(100vh-64px)] fixed left-0 top-16 border-r border-outline-variant dark:border-outline bg-surface dark:bg-surface-container-lowest w-72">
+<div class="p-lg flex items-center gap-md">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-primary-fixed">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a female QA engineer in a high-tech laboratory setting. She wears a navy blue technical jacket and has a focused, calm expression. The background features blurred servers with blinking blue and green LEDs, embodying a clean, high-density SaaS dashboard aesthetic with clinical, bright lighting and a professional atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKluHBo_xYQYBIcL9IZhoH_LM17vgNmBFtPxgtfr1SFek-_g7kYd2gZfx_HjqBrV9c6RcpvUXuoIjl4t260m16ibmznJ5J16N4W-3vwcXhcu7pkYSd2sVjiWi5sHx3Nq-X7l_01sPZXi98HlsK1fzWuJR2xEuHnKcDOS0lfD_j3D2VI-mar61qzzHLtG5kLRujbw5sT60i1DPYrd62uKeSIkm3oxTN-GWPFwGxhg04Wv2bC8JQQJoaBi2-w7_1fPy_tAYjkRkCrQ"/>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-primary">QA Engineer</div>
+<div class="font-label-md text-label-md text-on-surface-variant">Moodle Prod Instance</div>
+</div>
+</div>
+<nav class="flex flex-col gap-1 mt-md">
+<a class="text-on-surface-variant dark:text-outline mx-2 px-4 py-3 hover:bg-surface-container-highest flex items-center gap-md transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Test Overview</span>
+</a>
+<a class="bg-secondary-container dark:bg-on-secondary-fixed-variant text-on-secondary-container dark:text-secondary-fixed rounded-full mx-2 px-4 py-3 translate-x-1 flex items-center gap-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">fact_check</span>
+<span class="font-label-md text-label-md">Document Rules</span>
+</a>
+<a class="text-on-surface-variant dark:text-outline mx-2 px-4 py-3 hover:bg-surface-container-highest flex items-center gap-md transition-all" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-md text-label-md">Test Logs</span>
+</a>
+<a class="text-on-surface-variant dark:text-outline mx-2 px-4 py-3 hover:bg-surface-container-highest flex items-center gap-md transition-all" href="#">
+<span class="material-symbols-outlined">dns</span>
+<span class="font-label-md text-label-md">Environment Config</span>
+</a>
+</nav>
+<div class="mt-auto p-lg border-t border-outline-variant">
+<div class="font-label-md text-label-md text-outline uppercase tracking-wider">System Version</div>
+<div class="font-body-md text-body-md font-bold text-on-surface">V 4.2.1</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 lg:ml-72 p-md md:p-lg lg:p-xl max-w-7xl">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-xl gap-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Document Rules</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Verify visibility logic and security permissions for financial entities.</p>
+</div>
+<div class="flex items-center gap-sm">
+<button class="bg-primary text-on-primary px-lg py-sm rounded-lg font-label-md flex items-center gap-xs hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        NEW RULE
+                    </button>
+<button class="border border-outline-variant text-primary px-lg py-sm rounded-lg font-label-md hover:bg-surface-container transition-colors">
+                        RUN ALL TESTS
+                    </button>
+</div>
+</div>
+<!-- Search & Filter Bar -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-sm mb-lg flex flex-col md:flex-row gap-sm items-center">
+<div class="relative w-full md:flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-md py-2 bg-transparent border-none focus:ring-2 focus:ring-primary rounded-lg text-body-md" placeholder="Search rules by name, role, or entity..." type="text"/>
+</div>
+<div class="flex gap-sm w-full md:w-auto">
+<select class="bg-surface-container-low border-outline-variant rounded-lg text-label-md px-md py-2 focus:ring-primary w-1/2 md:w-32">
+<option>All Status</option>
+<option>Enabled</option>
+<option>Disabled</option>
+</select>
+<button class="flex items-center justify-center gap-xs bg-surface-container-low border border-outline-variant rounded-lg px-md py-2 text-label-md w-1/2 md:w-auto hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        FILTERS
+                    </button>
+</div>
+</div>
+<!-- Rules Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-md">
+<!-- Rule Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col rule-card-hover group">
+<div class="p-md border-b border-outline-variant flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary bg-primary-fixed p-2 rounded-lg">description</span>
+<div>
+<h3 class="font-body-lg text-body-lg font-bold text-on-surface">Invoice Visibility</h3>
+<p class="text-code-sm font-code-sm text-outline uppercase">FIN-RULE-001</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="p-md flex-1">
+<p class="font-body-md text-body-md text-on-surface mb-md">Invoices only visible to Finance role.</p>
+<div class="flex flex-wrap gap-xs mb-md">
+<span class="bg-surface-container text-primary text-label-md px-sm py-1 rounded">Role: Finance</span>
+<span class="bg-surface-container text-primary text-label-md px-sm py-1 rounded">Entity: Invoice</span>
+</div>
+</div>
+<div class="p-md bg-surface-container-low mt-auto flex justify-between items-center rounded-b-xl">
+<div class="flex flex-col">
+<span class="text-label-md font-label-md text-outline">LAST VERIFIED</span>
+<span class="text-body-md font-body-md text-on-surface">2 mins ago</span>
+</div>
+<span class="bg-secondary-container text-on-secondary-container text-label-md px-sm py-1 rounded font-bold">PASS</span>
+</div>
+</div>
+<!-- Rule Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col rule-card-hover group">
+<div class="p-md border-b border-outline-variant flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-tertiary bg-tertiary-fixed p-2 rounded-lg">receipt_long</span>
+<div>
+<h3 class="font-body-lg text-body-lg font-bold text-on-surface">Student Fee Ownership</h3>
+<p class="text-code-sm font-code-sm text-outline uppercase">FIN-RULE-002</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="p-md flex-1">
+<p class="font-body-md text-body-md text-on-surface mb-md">Student fee receipts visible to owners only.</p>
+<div class="flex flex-wrap gap-xs mb-md">
+<span class="bg-surface-container text-primary text-label-md px-sm py-1 rounded">Role: Student</span>
+<span class="bg-surface-container text-primary text-label-md px-sm py-1 rounded">Logic: IsOwner</span>
+</div>
+</div>
+<div class="p-md bg-surface-container-low mt-auto flex justify-between items-center rounded-b-xl">
+<div class="flex flex-col">
+<span class="text-label-md font-label-md text-outline">LAST VERIFIED</span>
+<span class="text-body-md font-body-md text-on-surface">45 mins ago</span>
+</div>
+<span class="bg-secondary-container text-on-secondary-container text-label-md px-sm py-1 rounded font-bold">PASS</span>
+</div>
+</div>
+<!-- Rule Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col rule-card-hover group opacity-75 grayscale-[0.5]">
+<div class="p-md border-b border-outline-variant flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-error bg-error-container p-2 rounded-lg">visibility_off</span>
+<div>
+<h3 class="font-body-lg text-body-lg font-bold text-on-surface">Payroll Global Hide</h3>
+<p class="text-code-sm font-code-sm text-outline uppercase">FIN-RULE-003</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="p-md flex-1">
+<p class="font-body-md text-body-md text-on-surface mb-md">Global payroll documents hidden from all students.</p>
+<div class="flex flex-wrap gap-xs mb-md">
+<span class="bg-surface-container text-primary text-label-md px-sm py-1 rounded">Role: Student</span>
+<span class="bg-surface-container text-primary text-label-md px-sm py-1 rounded">Entity: Payroll</span>
+</div>
+</div>
+<div class="p-md bg-surface-container-low mt-auto flex justify-between items-center rounded-b-xl">
+<div class="flex flex-col">
+<span class="text-label-md font-label-md text-outline">LAST VERIFIED</span>
+<span class="text-body-md font-body-md text-on-surface">3 days ago</span>
+</div>
+<span class="bg-outline-variant text-on-surface-variant text-label-md px-sm py-1 rounded font-bold uppercase">Disabled</span>
+</div>
+</div>
+<!-- Rule Card 4 (New Verification needed) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl flex flex-col rule-card-hover group">
+<div class="p-md border-b border-outline-variant flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary bg-secondary-fixed p-2 rounded-lg">shield_with_heart</span>
+<div>
+<h3 class="font-body-lg text-body-lg font-bold text-on-surface">Health Plan Privacy</h3>
+<p class="text-code-sm font-code-sm text-outline uppercase">FIN-RULE-004</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="p-md flex-1">
+<p class="font-body-md text-body-md text-on-surface mb-md">Staff medical deductions only visible to HR and employee.</p>
+<div class="flex flex-wrap gap-xs mb-md">
+<span class="bg-surface-container text-primary text-label-md px-sm py-1 rounded">Role: HR</span>
+<span class="bg-surface-container text-primary text-label-md px-sm py-1 rounded">PII: True</span>
+</div>
+</div>
+<div class="p-md bg-surface-container-low mt-auto flex justify-between items-center rounded-b-xl">
+<div class="flex flex-col">
+<span class="text-label-md font-label-md text-outline">LAST VERIFIED</span>
+<span class="text-body-md font-body-md text-on-surface">Pending...</span>
+</div>
+<span class="bg-error-container text-on-error-container text-label-md px-sm py-1 rounded font-bold">FAIL</span>
+</div>
+</div>
+<!-- Empty State Placeholder -->
+<div class="border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center p-xl gap-md min-h-[250px] hover:bg-surface-container-low transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-outline text-4xl group-hover:scale-110 transition-transform">post_add</span>
+<div class="text-center">
+<p class="font-body-lg text-body-lg font-bold text-on-surface-variant">Create New Verification Rule</p>
+<p class="font-body-md text-body-md text-outline">Define a new security logic to test</p>
+</div>
+</div>
+</div>
+<!-- Technical Detail Table (Density Showcase) -->
+<div class="mt-xl bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="p-md border-b border-outline-variant bg-surface-container-low">
+<h3 class="font-headline-md text-headline-md text-on-surface">Detailed Test Runs</h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+<th class="px-md py-sm">Timestamp</th>
+<th class="px-md py-sm">Rule ID</th>
+<th class="px-md py-sm">Test Vector</th>
+<th class="px-md py-sm">Expected</th>
+<th class="px-md py-sm">Result</th>
+<th class="px-md py-sm text-right">Performance</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-md py-xs text-body-md">2023-11-24 14:02:11</td>
+<td class="px-md py-xs text-code-sm font-bold">FR-001</td>
+<td class="px-md py-xs text-body-md">Guest User -> Invoice #44</td>
+<td class="px-md py-xs"><span class="text-error font-bold">403 Forbidden</span></td>
+<td class="px-md py-xs"><span class="text-secondary font-bold">403 Forbidden</span></td>
+<td class="px-md py-xs text-right font-code-sm">12ms</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-md py-xs text-body-md">2023-11-24 14:02:10</td>
+<td class="px-md py-xs text-code-sm font-bold">FR-001</td>
+<td class="px-md py-xs text-body-md">Finance User -> Invoice #44</td>
+<td class="px-md py-xs"><span class="text-secondary font-bold">200 OK</span></td>
+<td class="px-md py-xs"><span class="text-secondary font-bold">200 OK</span></td>
+<td class="px-md py-xs text-right font-code-sm">18ms</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-md py-xs text-body-md">2023-11-24 13:58:44</td>
+<td class="px-md py-xs text-code-sm font-bold">FR-004</td>
+<td class="px-md py-xs text-body-md">Manager -> Med-Rec #892</td>
+<td class="px-md py-xs"><span class="text-error font-bold">403 Forbidden</span></td>
+<td class="px-md py-xs"><span class="text-primary font-bold">200 OK</span></td>
+<td class="px-md py-xs text-right font-code-sm">42ms</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center px-sm py-xs bg-surface dark:bg-surface-container-low border-t border-outline-variant dark:border-outline h-16">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline p-2 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Overview</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary rounded-full px-4 py-1 scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">rule</span>
+<span class="font-label-md text-label-md">Rules</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline p-2 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-md text-label-md">Logs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline p-2 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">settings_input_component</span>
+<span class="font-label-md text-label-md">Config</span>
+</a>
+</nav>
+<!-- FAB for quick rule creation on mobile -->
+<button class="fixed bottom-20 right-4 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center md:hidden z-40 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+<script>
+        // Simple toggle interactions for status
+        document.querySelectorAll('input[type="checkbox"]').forEach(toggle => {
+            toggle.addEventListener('change', (e) => {
+                const card = e.target.closest('.rule-card-hover');
+                if (e.target.checked) {
+                    card.style.opacity = '1';
+                    card.classList.remove('grayscale-[0.5]');
+                } else {
+                    card.style.opacity = '0.75';
+                    card.classList.add('grayscale-[0.5]');
+                }
+            });
+        });
+
+        // Search highlight mock
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.rule-card-hover').forEach(card => {
+                const text = card.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body></html>
