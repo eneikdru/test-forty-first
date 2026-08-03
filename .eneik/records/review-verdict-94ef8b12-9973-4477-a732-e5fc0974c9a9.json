@@ -1,0 +1,15 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        {
+          "text": "Consider validating other required fields such as docType, specialty, eduLevel, and categoryId to prevent empty or malformed parameters on upload.",
+          "severity": "low"
+        }
+      ]
+    }
+  ]
+}
