@@ -13,7 +13,8 @@
     { value: "Administrator", label: "Администратор" },
     { value: "Content-manager", label: "Контент-менеджер" },
     { value: "Teacher", label: "Преподаватель / научный руководитель" },
-    { value: "Student", label: "Ординатор / аспирант / слушатель" }
+    { value: "Student", label: "Ординатор / аспирант / слушатель" },
+    { value: "Economist", label: "Экономист" }
   ];
 
   // 2. Search & Filter State
@@ -39,6 +40,7 @@
   let editDescription = "";
   let editError = "";
   let editSuccess = "";
+  let budgetAccessError = "";
 
   // 4. Persistence / Caching States (Loaded from LocalStorage)
   let documents = [];
@@ -129,6 +131,21 @@
       fileType: "application/pdf",
       updatedAt: "2026-06-20T11:00:00Z",
       updatedBy: "ivan.ivanov@epidem.ru"
+    },
+    {
+      id: "6c5d9e22-c35d-4f11-92b1-50e58f00032c",
+      name: "Финансовый план и бюджет на 2026 год",
+      description: "Официальный бюджет и финансовый план расходов образовательного центра ФБУН ЦНИИ Эпидемиологии Роспотребнадзора на 2026 год.",
+      doc_type: "Regulations",
+      specialty: "Other",
+      edu_level: "Residency",
+      category_id: "edu_budget_finance",
+      tags: ["бюджет", "финансы", "планирование"],
+      version: 1,
+      fileSize: 312000,
+      fileType: "application/pdf",
+      updatedAt: "2026-08-01T11:00:00Z",
+      updatedBy: "economist.test@epidem.ru"
     }
   ];
 
@@ -147,7 +164,16 @@
     // Check local storage for documents
     const savedDocs = localStorage.getItem("lexicon_documents");
     if (savedDocs) {
-      documents = JSON.parse(savedDocs);
+      let parsed = JSON.parse(savedDocs);
+      // Ensure the budget document is in parsed list
+      if (!parsed.some(d => d.id === "6c5d9e22-c35d-4f11-92b1-50e58f00032c")) {
+        const bDoc = SEED_DOCUMENTS.find(d => d.id === "6c5d9e22-c35d-4f11-92b1-50e58f00032c");
+        if (bDoc) {
+          parsed.push(bDoc);
+          localStorage.setItem("lexicon_documents", JSON.stringify(parsed));
+        }
+      }
+      documents = parsed;
     } else {
       documents = SEED_DOCUMENTS;
       localStorage.setItem("lexicon_documents", JSON.stringify(SEED_DOCUMENTS));
@@ -206,7 +232,8 @@
     const loggedUser = {
       username: loginUsername,
       role: loginRole,
-      fullName: loginUsername.includes("ivan") ? "Иванов Иван Иванович" : "Петров Петр Петрович"
+      fullName: loginUsername.includes("ivan") ? "Иванов Иван Иванович" :
+                (loginRole === "Economist" ? "Семенов Семен Семенович" : "Петров Петр Петрович")
     };
 
     user = loggedUser;
@@ -219,6 +246,7 @@
     user = null;
     localStorage.removeItem("lexicon_user");
     selectedDocument = null;
+    budgetAccessError = "";
   }
 
   // Search autocomplete / suggestion updates
@@ -367,6 +395,13 @@
     editDescription = doc.description;
     editError = "";
     editSuccess = "";
+
+    // Check Budget files visibility constraint for Student role
+    if (user && user.role === "Student" && (doc.category_id === "edu_budget_finance" || doc.tags.includes("бюджет") || doc.name.toLowerCase().includes("бюджет"))) {
+      budgetAccessError = "Доступ запрещен. У вас нет прав для просмотра финансовых документов и бюджетов.";
+    } else {
+      budgetAccessError = "";
+    }
   }
 
   function handleEditClick() {
@@ -836,7 +871,7 @@
 
           <!-- Document Tag Filter Chips -->
           <div class="flex flex-wrap gap-2 py-1">
-            {#each ["ординатура", "аспирантура", "шаблоны", "нормативные акты", "вопросы к экзаменам", "педиатрия", "инструкции", "регламент"] as tag}
+            {#each ["ординатура", "аспирантура", "шаблоны", "нормативные акты", "вопросы к экзаменам", "педиатрия", "инструкции", "регламент", "бюджет"] as tag}
               <button
                 on:click={() => selectedTag = (selectedTag === tag ? "" : tag)}
                 class="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors duration-100 flex items-center gap-1.5 border min-h-[32px]"
@@ -956,7 +991,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-              {#if user}
+              {#if user && !budgetAccessError}
                 <button
                   on:click={handleEditClick}
                   class="text-[#1A365D] hover:text-opacity-80 transition-colors p-1 flex items-center gap-1 text-xs font-semibold bg-[#e0e0ff] rounded px-2 py-1 min-h-[44px]"
@@ -989,8 +1024,17 @@
             </div>
           {/if}
 
-          {#if isEditing}
-            <div class="space-y-4 border border-outline-variant p-4 bg-[#051424] rounded">
+          {#if budgetAccessError}
+            <div class="bg-red-950 bg-opacity-40 border border-red-500 text-red-200 p-6 rounded text-sm font-medium space-y-3" id="budget-access-error-msg">
+              <div class="flex items-center gap-2 text-red-400 font-bold">
+                <span class="material-symbols-outlined text-xl">block</span>
+                <span>Доступ запрещен</span>
+              </div>
+              <p>{budgetAccessError}</p>
+            </div>
+          {:else}
+            {#if isEditing}
+              <div class="space-y-4 border border-outline-variant p-4 bg-[#051424] rounded">
               <h4 class="font-bold text-sm text-[#d4e4fa]">Редактирование материала</h4>
               <div>
                 <label for="edit-name-input" class="block text-xs font-bold text-[#d4e4fa] uppercase tracking-wider mb-2">Название документа</label>
@@ -1182,28 +1226,31 @@
               {/if}
             </div>
           {/if}
+        {/if}
 
         </div>
 
         <!-- Document Download Footer -->
-        <div class="border-t border-outline-variant pt-4 flex gap-3">
-          <a
-            href="/api/v1/documents/{selectedDocument.id}/export?format=pdf"
-            on:click|preventDefault={() => alert('Скачивание PDF начато (эмуляция)...')}
-            class="flex-1 py-3 bg-primary text-on-primary-fixed text-center font-bold text-xs rounded hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
-          >
-            <span class="material-symbols-outlined text-sm">download</span>
-            Скачать PDF
-          </a>
-          <a
-            href="/api/v1/documents/{selectedDocument.id}/export?format=docx"
-            on:click|preventDefault={() => alert('Скачивание DOCX начато (эмуляция)...')}
-            class="flex-1 py-3 bg-surface-variant hover:bg-surface-container-highest text-[#d4e4fa] text-center font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 min-h-[44px]"
-          >
-            <span class="material-symbols-outlined text-sm">description</span>
-            Скачать DOCX
-          </a>
-        </div>
+        {#if !budgetAccessError}
+          <div class="border-t border-outline-variant pt-4 flex gap-3">
+            <a
+              href="/api/v1/documents/{selectedDocument.id}/export?format=pdf"
+              on:click|preventDefault={() => alert('Скачивание PDF начато (эмуляция)...')}
+              class="flex-1 py-3 bg-primary text-on-primary-fixed text-center font-bold text-xs rounded hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+            >
+              <span class="material-symbols-outlined text-sm">download</span>
+              Скачать PDF
+            </a>
+            <a
+              href="/api/v1/documents/{selectedDocument.id}/export?format=docx"
+              on:click|preventDefault={() => alert('Скачивание DOCX начато (эмуляция)...')}
+              class="flex-1 py-3 bg-surface-variant hover:bg-surface-container-highest text-[#d4e4fa] text-center font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+            >
+              <span class="material-symbols-outlined text-sm">description</span>
+              Скачать DOCX
+            </a>
+          </div>
+        {/if}
 
       </div>
     </div>

@@ -861,6 +861,7 @@ components:
         - Content-manager
         - Teacher
         - Student
+        - Economist
       description: Mapped user permissions as per system requirements.
     User:
       type: object

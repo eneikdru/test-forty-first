@@ -111,3 +111,83 @@ def test_no_english_placeholders(page):
 
         # Verify no English words were matched
         assert len(matches) == 0, f"Found English placeholder text or words: '{matches}' in placeholder '{ph}'"
+
+
+def test_student_budget_access_denied(page):
+    # Navigate to the frontend dev server
+    page.goto("http://localhost:3000")
+    page.wait_for_timeout(1000)
+
+    # Select the 'Student' role
+    page.select_option("#role", "Student")
+    page.wait_for_timeout(500)
+
+    # Click the login button
+    page.get_by_role("button", name="Войти в систему").click()
+    page.wait_for_timeout(1000)
+
+    # Search for budget document using the input box
+    search_input = page.locator("input[placeholder*='Поиск по ключевым словам']")
+    search_input.fill("бюджет")
+    page.wait_for_timeout(1000)
+
+    # Click on the Budget document to open details drawer
+    page.get_by_role("button", name="Просмотреть подробности документа Финансовый план и бюджет на 2026 год").click()
+    page.wait_for_timeout(1000)
+
+    # Verify that the access is denied and error message is visible
+    error_msg = page.locator("#budget-access-error-msg")
+    assert error_msg.is_visible()
+    assert "Доступ запрещен" in error_msg.inner_text()
+
+    # Ensure edit button and download actions are NOT displayed
+    assert not page.locator("#edit-doc-btn").is_visible()
+    assert not page.get_by_role("link", name="Скачать PDF").is_visible()
+
+
+def test_economist_budget_access_granted(page):
+    # Navigate to the frontend dev server
+    page.goto("http://localhost:3000")
+    page.wait_for_timeout(1000)
+
+    # Select the 'Economist' role
+    page.select_option("#role", "Economist")
+    page.wait_for_timeout(500)
+
+    # Click the login button
+    page.get_by_role("button", name="Войти в систему").click()
+    page.wait_for_timeout(1000)
+
+    # Search for budget document using the input box
+    search_input = page.locator("input[placeholder*='Поиск по ключевым словам']")
+    search_input.fill("бюджет")
+    page.wait_for_timeout(1000)
+
+    # Click on the Budget document to open details drawer
+    page.get_by_role("button", name="Просмотреть подробности документа Финансовый план и бюджет на 2026 год").click()
+    page.wait_for_timeout(1000)
+
+    # Verify that the access denied message is NOT shown
+    assert not page.locator("#budget-access-error-msg").is_visible()
+
+    # Verify full read access: Title is visible
+    assert page.locator("#drawer-title").is_visible()
+    assert "Финансовый план и бюджет на 2026 год" in page.locator("#drawer-title").inner_text()
+
+    # Verify write access: Edit the document and save changes
+    edit_btn = page.locator("#edit-doc-btn")
+    assert edit_btn.is_visible()
+    edit_btn.click()
+    page.wait_for_timeout(1000)
+
+    # Fill name input to update
+    name_input = page.locator("#edit-name-input")
+    name_input.fill("Финансовый план и бюджет на 2026 год (изменено)")
+
+    # Save the updated document
+    page.locator("#save-edit-btn").click()
+    page.wait_for_timeout(1000)
+
+    # Verify success and updated title in the drawer
+    assert page.locator("#edit-success-msg").is_visible()
+    assert "Финансовый план и бюджет на 2026 год (изменено)" in page.locator("#drawer-title").inner_text()

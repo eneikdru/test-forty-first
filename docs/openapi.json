@@ -1326,7 +1326,8 @@
           "Administrator",
           "Content-manager",
           "Teacher",
-          "Student"
+          "Student",
+          "Economist"
         ],
         "description": "Mapped user permissions as per system requirements."
       },
