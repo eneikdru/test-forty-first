@@ -1,8 +1,0 @@
-/app/src/main/java/com/eneik/generated/Application.java
-/app/src/main/java/com/eneik/generated/model/Document.java
-/app/src/main/java/com/eneik/generated/model/DocumentVersion.java
-/app/src/main/java/com/eneik/generated/model/Role.java
-/app/src/main/java/com/eneik/generated/repository/DocumentRepository.java
-/app/src/main/java/com/eneik/generated/repository/DocumentVersionRepository.java
-/app/src/main/java/com/eneik/generated/repository/RoleRepository.java
-/app/src/main/java/com/eneik/generated/service/DocumentService.java

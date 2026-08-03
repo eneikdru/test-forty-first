@@ -3,7 +3,7 @@
 
   // 1. Core States
   let user = null; // Mapped to { username, role, fullName } after login
-  let loginUsername = "ivan.ivanov@epidem.ru";
+  let loginUsername = "иван.иванов@epidem.ru";
   let loginPassword = "securePassword123";
   let loginRole = "Administrator"; // Default pre-select for easier UX
   let loginError = "";
@@ -32,6 +32,12 @@
   let actualizationReason = "";
   let actualizationSuccess = false;
   let newCommentText = "";
+
+  // 3b. Editing document state
+  let isEditing = false;
+  let editName = "";
+  let editDescription = "";
+  let editError = "";
 
   // 4. Persistence / Caching States (Loaded from LocalStorage)
   let documents = [];
@@ -199,7 +205,7 @@
     const loggedUser = {
       username: loginUsername,
       role: loginRole,
-      fullName: loginUsername.includes("ivan") ? "Иванов Иван Иванович" : "Петров Петр Петрович"
+      fullName: loginUsername.includes("ivan") || loginUsername.includes("иван") ? "Иванов Иван Иванович" : "Петров Петр Петрович"
     };
 
     user = loggedUser;
@@ -355,6 +361,53 @@
     actualizationReason = "";
     actualizationSuccess = false;
     newCommentText = "";
+    isEditing = false;
+    editName = doc.name;
+    editDescription = doc.description;
+    editError = "";
+  }
+
+  function startEditing() {
+    if (user && user.role === "Student") {
+      editError = "Доступ запрещен. Ординаторы, аспиранты и слушатели не имеют прав на редактирование.";
+      isEditing = false;
+      return;
+    }
+    isEditing = true;
+    editError = "";
+  }
+
+  function saveDocumentEdit() {
+    if (user && user.role === "Student") {
+      editError = "Доступ запрещен. Ординаторы, аспиранты и слушатели не имеют прав на редактирование.";
+      return;
+    }
+    if (!editName.trim()) {
+      editError = "Название не может быть пустым";
+      return;
+    }
+
+    // Update the document in documents array
+    documents = documents.map(doc => {
+      if (doc.id === selectedDocument.id) {
+        return {
+          ...doc,
+          name: editName,
+          description: editDescription,
+          version: doc.version + 1,
+          updatedAt: new Date().toISOString(),
+          updatedBy: user.username
+        };
+      }
+      return doc;
+    });
+
+    localStorage.setItem("lexicon_documents", JSON.stringify(documents));
+
+    // Update selectedDocument reference
+    selectedDocument = documents.find(doc => doc.id === selectedDocument.id);
+    isEditing = false;
+    editError = "";
   }
 
   // Post a new comment
@@ -530,7 +583,7 @@
                 type="text"
                 bind:value={loginUsername}
                 class="w-full bg-surface-container-lowest border border-outline-variant rounded p-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary"
-                placeholder="ivan.ivanov@epidem.ru"
+                placeholder="иван.иванов@epidem.ru"
               />
             </div>
 
@@ -1006,6 +1059,68 @@
                   >
                     <span class="material-symbols-outlined text-xs">send</span>
                     <span>Отправить</span>
+                  </button>
+                </div>
+              </div>
+            {/if}
+          </div>
+
+          <!-- Edit Document Section -->
+          <div class="border-t border-outline-variant pt-4 space-y-3">
+            <h4 class="font-bold text-sm text-[#d4e4fa] flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-sm text-primary">edit</span>
+              Редактирование документа
+            </h4>
+
+            {#if editError}
+              <div class="bg-red-950 bg-opacity-40 border border-red-500 text-red-200 p-3 rounded text-xs font-semibold" id="edit-error">
+                {editError}
+              </div>
+            {/if}
+
+            {#if !isEditing}
+              <button
+                on:click={startEditing}
+                class="w-full py-2 bg-surface-variant text-[#d4e4fa] hover:bg-surface-container-highest font-bold text-xs rounded transition-colors flex items-center justify-center gap-1.5 min-h-[44px]"
+                id="edit-btn"
+              >
+                <span class="material-symbols-outlined text-sm">edit</span>
+                Редактировать метаданные
+              </button>
+            {:else}
+              <div class="space-y-3 p-3 bg-surface-container-low border border-outline-variant rounded">
+                <div>
+                  <label for="edit-name" class="block text-[10px] font-bold text-[#d4e4fa] uppercase tracking-wider mb-1">Название документа</label>
+                  <input
+                    id="edit-name"
+                    type="text"
+                    bind:value={editName}
+                    class="w-full bg-surface-container-lowest border border-outline-variant rounded p-2 text-xs text-on-surface focus:border-primary focus:ring-0"
+                  />
+                </div>
+                <div>
+                  <label for="edit-description" class="block text-[10px] font-bold text-[#d4e4fa] uppercase tracking-wider mb-1">Описание / Аннотация</label>
+                  <textarea
+                    id="edit-description"
+                    bind:value={editDescription}
+                    class="w-full bg-surface-container-lowest border border-outline-variant rounded p-2 text-xs text-on-surface focus:border-primary focus:ring-0"
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    on:click={saveDocumentEdit}
+                    class="flex-1 py-2 bg-primary text-on-primary-fixed hover:bg-opacity-90 font-bold text-xs rounded transition-colors"
+                    id="save-edit-btn"
+                  >
+                    Сохранить
+                  </button>
+                  <button
+                    on:click={() => { isEditing = false; editError = ""; }}
+                    class="flex-1 py-2 bg-surface-variant text-[#d4e4fa] hover:bg-surface-container-highest font-bold text-xs rounded transition-colors"
+                    id="cancel-edit-btn"
+                  >
+                    Отмена
                   </button>
                 </div>
               </div>
