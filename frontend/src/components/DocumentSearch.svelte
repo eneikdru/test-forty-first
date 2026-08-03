@@ -13,7 +13,8 @@
     { value: "Administrator", label: "Администратор" },
     { value: "Content-manager", label: "Контент-менеджер" },
     { value: "Teacher", label: "Преподаватель / научный руководитель" },
-    { value: "Student", label: "Ординатор / аспирант / слушатель" }
+    { value: "Student", label: "Ординатор / аспирант / слушатель" },
+    { value: "Economist", label: "Экономист" }
   ];
 
   // 2. Search & Filter State
@@ -21,8 +22,10 @@
   let selectedDocType = "";
   let selectedSpecialty = "";
   let selectedEduLevel = "";
+  let selectedCategory = "";
   let selectedTag = "";
   let activeTab = "search"; // "search" or "library" (favorites)
+  let categoryError = "";
 
   // 3. UI interaction states
   let searchSuggestions = [];
@@ -55,6 +58,21 @@
 
   // Seed documents data if local storage is empty
   const SEED_DOCUMENTS = [
+    {
+      id: "e5bf923d-4c5a-4fdf-91bf-a3c309503a4b",
+      name: "Бюджетный план образовательного центра на 2026 год",
+      description: "Смета расходов и financial планирование образовательного центра ФБУН ЦНИИ Эпидемиологии.",
+      doc_type: "Regulations",
+      specialty: "Other",
+      edu_level: "Residency",
+      category_id: "edu_budget_finance",
+      tags: ["бюджет", "финансы", "нормативные акты"],
+      version: 1,
+      fileSize: 350000,
+      fileType: "application/pdf",
+      updatedAt: "2026-08-01T10:00:00Z",
+      updatedBy: "economist.ivanov@epidem.ru"
+    },
     {
       id: "9a2fbb22-c35d-4f11-92b1-50e58f00032b",
       name: "ФГОС ВО по специальности Эпидемиология",
@@ -148,6 +166,28 @@
     const savedDocs = localStorage.getItem("lexicon_documents");
     if (savedDocs) {
       documents = JSON.parse(savedDocs);
+      // Ensure budget document is seeded if not present
+      if (!documents.some(d => d.id === "e5bf923d-4c5a-4fdf-91bf-a3c309503a4b")) {
+        documents = [
+          {
+            id: "e5bf923d-4c5a-4fdf-91bf-a3c309503a4b",
+            name: "Бюджетный план образовательного центра на 2026 год",
+            description: "Смета расходов и financial планирование образовательного центра ФБУН ЦНИИ Эпидемиологии.",
+            doc_type: "Regulations",
+            specialty: "Other",
+            edu_level: "Residency",
+            category_id: "edu_budget_finance",
+            tags: ["бюджет", "финансы", "нормативные акты"],
+            version: 1,
+            fileSize: 350000,
+            fileType: "application/pdf",
+            updatedAt: "2026-08-01T10:00:00Z",
+            updatedBy: "economist.ivanov@epidem.ru"
+          },
+          ...documents
+        ];
+        localStorage.setItem("lexicon_documents", JSON.stringify(documents));
+      }
     } else {
       documents = SEED_DOCUMENTS;
       localStorage.setItem("lexicon_documents", JSON.stringify(SEED_DOCUMENTS));
@@ -190,9 +230,19 @@
     isOffline = true;
   }
 
+  // Handle Category Select Change
+  function handleCategoryChange() {
+    categoryError = "";
+    if (selectedCategory === "edu_budget_finance" && user && user.role === "Student") {
+      categoryError = "Доступ запрещен. Ординаторы, аспиранты и слушатели не имеют прав доступа к бюджетным файлам.";
+      selectedCategory = ""; // reset
+    }
+  }
+
   // Handle Login authentication
   function handleLogin(e) {
     e.preventDefault();
+    categoryError = "";
     if (!loginUsername) {
       loginError = "Введите имя пользователя или корпоративный email";
       return;
@@ -212,6 +262,7 @@
     user = loggedUser;
     localStorage.setItem("lexicon_user", JSON.stringify(loggedUser));
     loginError = "";
+    selectedCategory = ""; // Reset category filter on login
   }
 
   // Handle Logout
@@ -219,6 +270,8 @@
     user = null;
     localStorage.removeItem("lexicon_user");
     selectedDocument = null;
+    categoryError = "";
+    selectedCategory = "";
   }
 
   // Search autocomplete / suggestion updates
@@ -316,6 +369,11 @@
 
   // Search and Filter logic
   $: filteredDocuments = documents.filter(doc => {
+    // If Student, hide any budget documents
+    if (doc.category_id === "edu_budget_finance" && user && user.role === "Student") {
+      return false;
+    }
+
     // Filter by Tab (all vs favorites)
     if (activeTab === "library" && !favorites.includes(doc.id)) {
       return false;
@@ -349,6 +407,7 @@
     if (selectedDocType && doc.doc_type !== selectedDocType) return false;
     if (selectedSpecialty && doc.specialty !== selectedSpecialty) return false;
     if (selectedEduLevel && doc.edu_level !== selectedEduLevel) return false;
+    if (selectedCategory && doc.category_id !== selectedCategory) return false;
 
     // Tag filter chip
     if (selectedTag && !doc.tags.includes(selectedTag)) return false;
@@ -358,6 +417,12 @@
 
   // Open document details drawer
   function openDocumentDetails(doc) {
+    if (doc.category_id === "edu_budget_finance" && user && user.role === "Student") {
+      categoryError = "Доступ запрещен. Ординаторы, аспиранты и слушатели не имеют прав доступа к бюджетным файлам.";
+      selectedDocument = null;
+      return;
+    }
+
     selectedDocument = doc;
     actualizationReason = "";
     actualizationSuccess = false;
@@ -706,6 +771,24 @@
                 <option value="Additional Professional Education">Доп. проф. образование</option>
               </select>
             </div>
+
+            <!-- Category Filter -->
+            <div>
+              <label for="filter-category" class="block text-xs font-bold uppercase text-on-surface-variant mb-1.5">Категория</label>
+              <select
+                id="filter-category"
+                bind:value={selectedCategory}
+                on:change={handleCategoryChange}
+                class="w-full bg-surface-container-lowest border border-outline-variant text-sm rounded p-2 focus:border-primary focus:ring-0 text-on-surface"
+              >
+                <option value="">Все категории</option>
+                <option value="edu_center_root">Общая категория</option>
+                <option value="edu_budget_finance">Бюджет и финансы</option>
+                <option value="edu_staff_workload">Кадры и нагрузка</option>
+                <option value="edu_scholarships">Стипендии</option>
+                <option value="edu_academic_reports">Отчетность</option>
+              </select>
+            </div>
           </div>
 
           <!-- Saved Searches Section -->
@@ -752,6 +835,12 @@
 
         <!-- MAIN SEARCH & DOCUMENTS LIST (3/4 layout, fluid & responsive) -->
         <section class="lg:col-span-3 space-y-6" aria-label="Поиск и список материалов">
+
+          {#if categoryError}
+            <div class="bg-red-950 bg-opacity-40 border border-red-500 text-red-200 p-3 rounded text-sm font-medium" id="category-error-msg">
+              {categoryError}
+            </div>
+          {/if}
 
           <!-- Search Input Box (Vastly interactive) -->
           <div class="relative cyan-glow-focus transition-all">
