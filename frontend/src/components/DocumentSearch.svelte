@@ -13,7 +13,8 @@
     { value: "Administrator", label: "Администратор" },
     { value: "Content-manager", label: "Контент-менеджер" },
     { value: "Teacher", label: "Преподаватель / научный руководитель" },
-    { value: "Student", label: "Ординатор / аспирант / слушатель" }
+    { value: "Student", label: "Ординатор / аспирант / слушатель" },
+    { value: "Economist", label: "Экономист" }
   ];
 
   // 2. Search & Filter State
@@ -39,6 +40,9 @@
   let editDescription = "";
   let editError = "";
   let editSuccess = "";
+
+  $: isBudgetFile = selectedDocument && (selectedDocument.category_id === "edu_budget_finance" || selectedDocument.tags.includes("бюджет") || selectedDocument.tags.includes("Budget") || selectedDocument.name.toLowerCase().includes("бюджет") || selectedDocument.name.toLowerCase().includes("budget"));
+  $: accessDeniedToSelected = user && user.role === "Student" && isBudgetFile;
 
   // 4. Persistence / Caching States (Loaded from LocalStorage)
   let documents = [];
@@ -129,6 +133,21 @@
       fileType: "application/pdf",
       updatedAt: "2026-06-20T11:00:00Z",
       updatedBy: "ivan.ivanov@epidem.ru"
+    },
+    {
+      id: "b45a6b7c-8d9e-0f1a-2b3c-4d5e6f7a8bc9",
+      name: "Годовой финансовый бюджет центра на 2026 год",
+      description: "Детализированный годовой финансовый план, статьи расходов, распределение бюджетного финансирования кафедры.",
+      doc_type: "Regulations",
+      specialty: "Other",
+      edu_level: "Residency",
+      category_id: "edu_budget_finance",
+      tags: ["ординатура", "нормативные акты", "бюджет", "финансы"],
+      version: 1,
+      fileSize: 450000,
+      fileType: "application/pdf",
+      updatedAt: "2026-08-01T10:00:00Z",
+      updatedBy: "economist@epidem.ru"
     }
   ];
 
@@ -147,7 +166,13 @@
     // Check local storage for documents
     const savedDocs = localStorage.getItem("lexicon_documents");
     if (savedDocs) {
-      documents = JSON.parse(savedDocs);
+      const parsed = JSON.parse(savedDocs);
+      if (!parsed.some(d => d.id === "b45a6b7c-8d9e-0f1a-2b3c-4d5e6f7a8bc9")) {
+        documents = [...parsed, ...SEED_DOCUMENTS.filter(d => d.id === "b45a6b7c-8d9e-0f1a-2b3c-4d5e6f7a8bc9")];
+        localStorage.setItem("lexicon_documents", JSON.stringify(documents));
+      } else {
+        documents = parsed;
+      }
     } else {
       documents = SEED_DOCUMENTS;
       localStorage.setItem("lexicon_documents", JSON.stringify(SEED_DOCUMENTS));
@@ -956,7 +981,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-              {#if user}
+              {#if user && !accessDeniedToSelected}
                 <button
                   on:click={handleEditClick}
                   class="text-[#1A365D] hover:text-opacity-80 transition-colors p-1 flex items-center gap-1 text-xs font-semibold bg-[#e0e0ff] rounded px-2 py-1 min-h-[44px]"
@@ -989,221 +1014,236 @@
             </div>
           {/if}
 
-          {#if isEditing}
-            <div class="space-y-4 border border-outline-variant p-4 bg-[#051424] rounded">
-              <h4 class="font-bold text-sm text-[#d4e4fa]">Редактирование материала</h4>
-              <div>
-                <label for="edit-name-input" class="block text-xs font-bold text-[#d4e4fa] uppercase tracking-wider mb-2">Название документа</label>
-                <input
-                  id="edit-name-input"
-                  type="text"
-                  bind:value={editName}
-                  class="w-full bg-surface-container-lowest border border-outline-variant rounded p-3 text-sm text-[#051424] focus:border-primary focus:ring-1 focus:ring-primary"
-                  placeholder="Введите новое название..."
-                />
-              </div>
-              <div>
-                <label for="edit-description-input" class="block text-xs font-bold text-[#d4e4fa] uppercase tracking-wider mb-2">Аннотация</label>
-                <textarea
-                  id="edit-description-input"
-                  bind:value={editDescription}
-                  class="w-full bg-surface-container-lowest border border-outline-variant rounded p-3 text-sm text-[#051424] focus:border-primary focus:ring-1 focus:ring-primary"
-                  rows="4"
-                  placeholder="Введите новое описание..."
-                ></textarea>
-              </div>
-              <div class="flex gap-2">
-                <button
-                  on:click={handleSaveEdit}
-                  class="flex-1 py-2 bg-[#1A365D] text-[#e0e0ff] font-bold text-xs rounded hover:bg-opacity-90 transition-all min-h-[44px]"
-                  id="save-edit-btn"
-                >
-                  Сохранить изменения
-                </button>
-                <button
-                  on:click={handleCancelEdit}
-                  class="flex-1 py-2 bg-surface-variant hover:bg-surface-container-highest text-[#d4e4fa] font-bold text-xs rounded transition-colors min-h-[44px]"
-                  id="cancel-edit-btn"
-                >
-                  Отмена
-                </button>
-              </div>
-            </div>
-          {:else}
-            <!-- Document Profile Specs -->
-            <div class="grid grid-cols-2 gap-4 bg-surface-container-low p-4 border border-outline-variant rounded text-xs">
-              <div>
-                <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Специальность</span>
-                <span class="font-semibold text-[#d4e4fa]">{getSpecialtyLabel(selectedDocument.specialty)}</span>
-              </div>
-              <div>
-                <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Уровень образования</span>
-                <span class="font-semibold text-[#d4e4fa]">{getEduLevelLabel(selectedDocument.edu_level)}</span>
-              </div>
-              <div>
-                <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Размер файла</span>
-                <span class="font-semibold text-[#d4e4fa]">{formatBytes(selectedDocument.fileSize)}</span>
-              </div>
-              <div>
-                <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Дата обновления</span>
-                <span class="font-semibold text-[#d4e4fa]">{formatDate(selectedDocument.updatedAt)}</span>
-              </div>
-              <div>
-                <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Текущая версия</span>
-                <span class="font-semibold text-[#d4e4fa]">Версия {selectedDocument.version}</span>
-              </div>
-              <div>
-                <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Изменил</span>
-                <span class="font-semibold text-[#d4e4fa]">{selectedDocument.updatedBy}</span>
-              </div>
-            </div>
-
-            <!-- Description -->
-            <div class="space-y-2">
-              <h4 class="font-bold text-sm text-[#d4e4fa]">Аннотация документа</h4>
-              <p class="text-xs text-on-surface-variant leading-relaxed">
-                {selectedDocument.description}
+          {#if accessDeniedToSelected}
+            <!-- STUDENT BUDGET ACCESS DENIED -->
+            <div class="p-6 bg-red-950/40 border border-red-500 rounded text-center space-y-4" id="budget-access-denied">
+              <span class="material-symbols-outlined text-red-500 text-5xl">lock</span>
+              <h4 class="text-lg font-bold text-red-200">Доступ ограничен</h4>
+              <p class="text-sm text-red-300 leading-relaxed">
+                У ординаторов, аспирантов и слушателей нет прав доступа к финансовым и бюджетным документам центра.
               </p>
             </div>
-
-            <!-- Version History Section -->
-            <div class="space-y-2">
-              <h4 class="font-bold text-sm text-[#d4e4fa] flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-sm">history</span>
-                История версий документа
-              </h4>
-              <div class="border border-outline-variant rounded overflow-hidden">
-                <table class="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr class="bg-surface-container-low border-b border-outline-variant font-bold text-on-surface-variant">
-                      <th class="p-2">Версия</th>
-                      <th class="p-2">Дата изменения</th>
-                      <th class="p-2">Автор изменений</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr class="border-b border-outline-variant/30">
-                      <td class="p-2 font-bold text-[#d4e4fa]">v{selectedDocument.version} (Текущая)</td>
-                      <td class="p-2">{formatDate(selectedDocument.updatedAt)}</td>
-                      <td class="p-2">{selectedDocument.updatedBy}</td>
-                    </tr>
-                    {#if selectedDocument.version > 1}
-                      <tr class="border-b border-outline-variant/30 bg-surface-container-low/20">
-                        <td class="p-2">v{selectedDocument.version - 1}</td>
-                        <td class="p-2">12 июня 2026</td>
-                        <td class="p-2">system@epidem.ru</td>
-                      </tr>
-                    {/if}
-                  </tbody>
-                </table>
+          {:else}
+            {#if isEditing}
+              <div class="space-y-4 border border-outline-variant p-4 bg-[#051424] rounded">
+                <h4 class="font-bold text-sm text-[#d4e4fa]">Редактирование материала</h4>
+                <div>
+                  <label for="edit-name-input" class="block text-xs font-bold text-[#d4e4fa] uppercase tracking-wider mb-2">Название документа</label>
+                  <input
+                    id="edit-name-input"
+                    type="text"
+                    bind:value={editName}
+                    class="w-full bg-surface-container-lowest border border-outline-variant rounded p-3 text-sm text-[#051424] focus:border-primary focus:ring-1 focus:ring-primary"
+                    placeholder="Введите новое название..."
+                  />
+                </div>
+                <div>
+                  <label for="edit-description-input" class="block text-xs font-bold text-[#d4e4fa] uppercase tracking-wider mb-2">Аннотация</label>
+                  <textarea
+                    id="edit-description-input"
+                    bind:value={editDescription}
+                    class="w-full bg-surface-container-lowest border border-outline-variant rounded p-3 text-sm text-[#051424] focus:border-primary focus:ring-1 focus:ring-primary"
+                    rows="4"
+                    placeholder="Введите новое описание..."
+                  ></textarea>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    on:click={handleSaveEdit}
+                    class="flex-1 py-2 bg-[#1A365D] text-[#e0e0ff] font-bold text-xs rounded hover:bg-opacity-90 transition-all min-h-[44px]"
+                    id="save-edit-btn"
+                  >
+                    Сохранить изменения
+                  </button>
+                  <button
+                    on:click={handleCancelEdit}
+                    class="flex-1 py-2 bg-surface-variant hover:bg-surface-container-highest text-[#d4e4fa] font-bold text-xs rounded transition-colors min-h-[44px]"
+                    id="cancel-edit-btn"
+                  >
+                    Отмена
+                  </button>
+                </div>
               </div>
-            </div>
-          {/if}
+            {:else}
+              <!-- Document Profile Specs -->
+              <div class="grid grid-cols-2 gap-4 bg-surface-container-low p-4 border border-outline-variant rounded text-xs">
+                <div>
+                  <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Специальность</span>
+                  <span class="font-semibold text-[#d4e4fa]">{getSpecialtyLabel(selectedDocument.specialty)}</span>
+                </div>
+                <div>
+                  <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Уровень образования</span>
+                  <span class="font-semibold text-[#d4e4fa]">{getEduLevelLabel(selectedDocument.edu_level)}</span>
+                </div>
+                <div>
+                  <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Размер файла</span>
+                  <span class="font-semibold text-[#d4e4fa]">{formatBytes(selectedDocument.fileSize)}</span>
+                </div>
+                <div>
+                  <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Дата обновления</span>
+                  <span class="font-semibold text-[#d4e4fa]">{formatDate(selectedDocument.updatedAt)}</span>
+                </div>
+                <div>
+                  <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Текущая версия</span>
+                  <span class="font-semibold text-[#d4e4fa]">Версия {selectedDocument.version}</span>
+                </div>
+                <div>
+                  <span class="block text-on-surface-variant uppercase font-bold text-[10px] mb-0.5">Изменил</span>
+                  <span class="font-semibold text-[#d4e4fa]">{selectedDocument.updatedBy}</span>
+                </div>
+              </div>
 
-          {#if !isEditing}
-            <!-- Comments Section -->
-            <div class="space-y-3 pt-2">
-              <h4 class="font-bold text-sm text-[#d4e4fa] flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-sm">comment</span>
-                Комментарии и обсуждение
-              </h4>
+              <!-- Description -->
+              <div class="space-y-2">
+                <h4 class="font-bold text-sm text-[#d4e4fa]">Аннотация документа</h4>
+                <p class="text-xs text-on-surface-variant leading-relaxed">
+                  {selectedDocument.description}
+                </p>
+              </div>
 
-              <div class="space-y-3 max-h-48 overflow-y-auto pr-1">
-                {#if !(commentsDb[selectedDocument.id]) || commentsDb[selectedDocument.id].length === 0}
-                  <p class="text-xs text-on-surface-variant py-2">Нет комментариев к этому документу. Напишите первый!</p>
-                {:else}
-                  {#each commentsDb[selectedDocument.id] as comment}
-                    <div class="p-3 bg-surface-container-low border border-outline-variant/60 rounded space-y-1">
-                      <div class="flex justify-between text-[11px] font-semibold">
-                        <span class="text-primary">{comment.user}</span>
-                        <span class="text-on-surface-variant">{formatDate(comment.createdAt)}</span>
+              <!-- Version History Section -->
+              <div class="space-y-2">
+                <h4 class="font-bold text-sm text-[#d4e4fa] flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm">history</span>
+                  История версий документа
+                </h4>
+                <div class="border border-outline-variant rounded overflow-hidden">
+                  <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr class="bg-surface-container-low border-b border-outline-variant font-bold text-on-surface-variant">
+                        <th class="p-2">Версия</th>
+                        <th class="p-2">Дата изменения</th>
+                        <th class="p-2">Автор изменений</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="border-b border-outline-variant/30">
+                        <td class="p-2 font-bold text-[#d4e4fa]">v{selectedDocument.version} (Текущая)</td>
+                        <td class="p-2">{formatDate(selectedDocument.updatedAt)}</td>
+                        <td class="p-2">{selectedDocument.updatedBy}</td>
+                      </tr>
+                      {#if selectedDocument.version > 1}
+                        <tr class="border-b border-outline-variant/30 bg-surface-container-low/20">
+                          <td class="p-2">v{selectedDocument.version - 1}</td>
+                          <td class="p-2">12 июня 2026</td>
+                          <td class="p-2">system@epidem.ru</td>
+                        </tr>
+                      {/if}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            {/if}
+
+            {#if !isEditing}
+              <!-- Comments Section -->
+              <div class="space-y-3 pt-2">
+                <h4 class="font-bold text-sm text-[#d4e4fa] flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm">comment</span>
+                  Комментарии и обсуждение
+                </h4>
+
+                <div class="space-y-3 max-h-48 overflow-y-auto pr-1">
+                  {#if !(commentsDb[selectedDocument.id]) || commentsDb[selectedDocument.id].length === 0}
+                    <p class="text-xs text-on-surface-variant py-2">Нет комментариев к этому документу. Напишите первый!</p>
+                  {:else}
+                    {#each commentsDb[selectedDocument.id] as comment}
+                      <div class="p-3 bg-surface-container-low border border-outline-variant/60 rounded space-y-1">
+                        <div class="flex justify-between text-[11px] font-semibold">
+                          <span class="text-primary">{comment.user}</span>
+                          <span class="text-on-surface-variant">{formatDate(comment.createdAt)}</span>
+                        </div>
+                        <p class="text-xs text-on-surface">{comment.text}</p>
                       </div>
-                      <p class="text-xs text-on-surface">{comment.text}</p>
+                    {/each}
+                  {/if}
+                </div>
+
+                <!-- Add Comment Form -->
+                {#if user}
+                  <div class="space-y-2 pt-1">
+                    <textarea
+                      bind:value={newCommentText}
+                      disabled={isOffline}
+                      placeholder={isOffline ? "Вы не можете комментировать в автономном режиме" : "Напишите ваш комментарий или вопрос по материалу..."}
+                      class="w-full bg-surface-container-lowest border border-outline-variant rounded p-2 text-xs text-on-surface focus:border-primary focus:ring-0"
+                      rows="2"
+                    ></textarea>
+                    <div class="flex justify-end">
+                      <button
+                        on:click={postComment}
+                        disabled={!newCommentText || isOffline}
+                        class="px-4 py-2 bg-primary text-on-primary-fixed hover:bg-opacity-90 disabled:opacity-50 text-xs font-bold rounded flex items-center gap-1.5 transition-all"
+                      >
+                        <span class="material-symbols-outlined text-xs">send</span>
+                        <span>Отправить</span>
+                      </button>
                     </div>
-                  {/each}
+                  </div>
                 {/if}
               </div>
 
-              <!-- Add Comment Form -->
-              {#if user}
-                <div class="space-y-2 pt-1">
-                  <textarea
-                    bind:value={newCommentText}
-                    disabled={isOffline}
-                    placeholder={isOffline ? "Вы не можете комментировать в автономном режиме" : "Напишите ваш комментарий или вопрос по материалу..."}
-                    class="w-full bg-surface-container-lowest border border-outline-variant rounded p-2 text-xs text-on-surface focus:border-primary focus:ring-0"
-                    rows="2"
-                  ></textarea>
-                  <div class="flex justify-end">
+              <!-- Document Actualization Request Box (Only for Teachers/Students to report outdated documents) -->
+              <div class="border-t border-outline-variant pt-4 space-y-3">
+                <h4 class="font-bold text-sm text-[#d4e4fa] flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm text-red-400">report_problem</span>
+                  Сообщить о неактуальности материала
+                </h4>
+                <p class="text-xs text-on-surface-variant leading-normal">
+                  Если данный документ устарел или противоречит приказам Минздрава/Роспотребнадзора, отправьте official-запрос на актуализацию.
+                </p>
+
+                {#if actualizationSuccess}
+                  <div class="bg-green-950 bg-opacity-30 border border-green-500 text-green-200 p-3 rounded text-xs font-semibold">
+                    Запрос на актуализацию успешно отправлен контент-менеджерам центра!
+                  </div>
+                {:else}
+                  <div class="space-y-2">
+                    <input
+                      type="text"
+                      bind:value={actualizationReason}
+                      disabled={isOffline}
+                      placeholder={isOffline ? "Недоступно в автономном режиме" : "Укажите причину актуализации (например, Приказ №124)..."}
+                      class="w-full bg-surface-container-lowest border border-outline-variant rounded p-2 text-xs focus:border-primary focus:ring-0 text-on-surface"
+                    />
                     <button
-                      on:click={postComment}
-                      disabled={!newCommentText || isOffline}
-                      class="px-4 py-2 bg-primary text-on-primary-fixed hover:bg-opacity-90 disabled:opacity-50 text-xs font-bold rounded flex items-center gap-1.5 transition-all"
+                      on:click={sendActualizationRequest}
+                      disabled={!actualizationReason || isOffline}
+                      class="w-full py-2 bg-error-container text-on-error-container hover:bg-opacity-85 disabled:opacity-50 text-xs font-bold rounded transition-colors"
                     >
-                      <span class="material-symbols-outlined text-xs">send</span>
-                      <span>Отправить</span>
+                      Отправить запрос на актуализацию
                     </button>
                   </div>
-                </div>
-              {/if}
-            </div>
-
-            <!-- Document Actualization Request Box (Only for Teachers/Students to report outdated documents) -->
-            <div class="border-t border-outline-variant pt-4 space-y-3">
-              <h4 class="font-bold text-sm text-[#d4e4fa] flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-sm text-red-400">report_problem</span>
-                Сообщить о неактуальности материала
-              </h4>
-              <p class="text-xs text-on-surface-variant leading-normal">
-                Если данный документ устарел или противоречит приказам Минздрава/Роспотребнадзора, отправьте official-запрос на актуализацию.
-              </p>
-
-              {#if actualizationSuccess}
-                <div class="bg-green-950 bg-opacity-30 border border-green-500 text-green-200 p-3 rounded text-xs font-semibold">
-                  Запрос на актуализацию успешно отправлен контент-менеджерам центра!
-                </div>
-              {:else}
-                <div class="space-y-2">
-                  <input
-                    type="text"
-                    bind:value={actualizationReason}
-                    disabled={isOffline}
-                    placeholder={isOffline ? "Недоступно в автономном режиме" : "Укажите причину актуализации (например, Приказ №124)..."}
-                    class="w-full bg-surface-container-lowest border border-outline-variant rounded p-2 text-xs focus:border-primary focus:ring-0 text-on-surface"
-                  />
-                  <button
-                    on:click={sendActualizationRequest}
-                    disabled={!actualizationReason || isOffline}
-                    class="w-full py-2 bg-error-container text-on-error-container hover:bg-opacity-85 disabled:opacity-50 text-xs font-bold rounded transition-colors"
-                  >
-                    Отправить запрос на актуализацию
-                  </button>
-                </div>
-              {/if}
-            </div>
+                {/if}
+              </div>
+            {/if}
           {/if}
 
         </div>
 
         <!-- Document Download Footer -->
-        <div class="border-t border-outline-variant pt-4 flex gap-3">
-          <a
-            href="/api/v1/documents/{selectedDocument.id}/export?format=pdf"
-            on:click|preventDefault={() => alert('Скачивание PDF начато (эмуляция)...')}
-            class="flex-1 py-3 bg-primary text-on-primary-fixed text-center font-bold text-xs rounded hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
-          >
-            <span class="material-symbols-outlined text-sm">download</span>
-            Скачать PDF
-          </a>
-          <a
-            href="/api/v1/documents/{selectedDocument.id}/export?format=docx"
-            on:click|preventDefault={() => alert('Скачивание DOCX начато (эмуляция)...')}
-            class="flex-1 py-3 bg-surface-variant hover:bg-surface-container-highest text-[#d4e4fa] text-center font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 min-h-[44px]"
-          >
-            <span class="material-symbols-outlined text-sm">description</span>
-            Скачать DOCX
-          </a>
-        </div>
+        {#if !accessDeniedToSelected}
+          <div class="border-t border-outline-variant pt-4 flex gap-3">
+            <a
+              href="/api/v1/documents/{selectedDocument.id}/export?format=pdf"
+              on:click|preventDefault={() => alert('Скачивание PDF начато (эмуляция)...')}
+              class="flex-1 py-3 bg-primary text-on-primary-fixed text-center font-bold text-xs rounded hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+              id="download-pdf-btn"
+            >
+              <span class="material-symbols-outlined text-sm">download</span>
+              Скачать PDF
+            </a>
+            <a
+              href="/api/v1/documents/{selectedDocument.id}/export?format=docx"
+              on:click|preventDefault={() => alert('Скачивание DOCX начато (эмуляция)...')}
+              class="flex-1 py-3 bg-surface-variant hover:bg-surface-container-highest text-[#d4e4fa] text-center font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+              id="download-docx-btn"
+            >
+              <span class="material-symbols-outlined text-sm">description</span>
+              Скачать DOCX
+            </a>
+          </div>
+        {/if}
 
       </div>
     </div>

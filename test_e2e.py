@@ -60,6 +60,67 @@ def test_student_edit_denied(page):
     # Ensure edit input fields are NOT displayed
     assert not page.locator("#edit-name-input").is_visible()
 
+def test_student_budget_access_denied(page):
+    # Navigate to frontend dev server
+    page.goto("http://localhost:3000")
+    page.wait_for_timeout(1000)
+
+    # Login as Student
+    page.select_option("#role", "Student")
+    page.get_by_role("button", name="Войти в систему").click()
+    page.wait_for_timeout(1000)
+
+    # Click on the Budget document to open details
+    page.get_by_role("button", name="Просмотреть подробности документа Годовой финансовый бюджет центра на 2026 год").click()
+    page.wait_for_timeout(1000)
+
+    # Access denied container must be visible
+    assert page.locator("#budget-access-denied").is_visible()
+    assert "Доступ ограничен" in page.locator("#budget-access-denied").inner_text()
+
+    # Edit, download buttons should be hidden
+    assert not page.locator("#edit-doc-btn").is_visible()
+    assert not page.locator("#download-pdf-btn").is_visible()
+    assert not page.locator("#download-docx-btn").is_visible()
+
+def test_economist_budget_access_granted(page):
+    # Navigate to frontend dev server
+    page.goto("http://localhost:3000")
+    page.wait_for_timeout(1000)
+
+    # Login as Economist
+    page.select_option("#role", "Economist")
+    page.get_by_role("button", name="Войти в систему").click()
+    page.wait_for_timeout(1000)
+
+    # Click on the Budget document to open details
+    page.get_by_role("button", name="Просмотреть подробности документа Годовой финансовый бюджет центра на 2026 год").click()
+    page.wait_for_timeout(1000)
+
+    # Access denied container must NOT be visible
+    assert not page.locator("#budget-access-denied").is_visible()
+
+    # Download buttons and edit button must be visible
+    assert page.locator("#edit-doc-btn").is_visible()
+    assert page.locator("#download-pdf-btn").is_visible()
+    assert page.locator("#download-docx-btn").is_visible()
+
+    # Edit document
+    page.locator("#edit-doc-btn").click()
+    page.wait_for_timeout(1000)
+
+    # Fill in new title and description
+    page.fill("#edit-name-input", "Годовой финансовый бюджет центра на 2026 год - ОБНОВЛЕН")
+    page.fill("#edit-description-input", "Новая отредактированная аннотация бюджета.")
+    page.locator("#save-edit-btn").click()
+    page.wait_for_timeout(1000)
+
+    # Verify changes successfully applied
+    assert page.locator("#edit-success-msg").is_visible()
+    assert "успешно" in page.locator("#edit-success-msg").inner_text()
+    assert page.locator("h3#drawer-title").is_visible()
+    assert "ОБНОВЛЕН" in page.locator("h3#drawer-title").inner_text()
+
 def test_no_english_placeholders(page):
     # Navigate to frontend
     page.goto("http://localhost:3000")
