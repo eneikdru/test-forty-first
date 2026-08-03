@@ -1,0 +1,1592 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Centralized Knowledge Base API",
+    "description": "API contract for the centralized knowledge base of the Education Center of \nFBUN Central Research Institute of Epidemiology of Rospotrebnadzor.\nDesigned to support parallel backend and frontend development for residency, postgraduate, \nand additional professional education courses.\n",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "v1 Base URL"
+    }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate user",
+        "description": "Log in using corporate credentials or local username/password.",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "ivan.ivanov@epidem.ru"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "securePassword123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Log out user",
+        "description": "Invalidate the current session or security token.",
+        "tags": [
+          "Authentication"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully logged out"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents": {
+      "get": {
+        "summary": "List and search documents",
+        "description": "Retrieve a paginated list of documents. Supports full-text search, autocompletion/suggestions, and metadata filtering.",
+        "tags": [
+          "Documents"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Full-text search query supporting synonyms, abbreviations (e.g., 'ФБУН', 'ГЭК', 'ГИА', 'ФГОС'), and auto-suggest.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "ФГОС Эпидемиология"
+            }
+          },
+          {
+            "name": "suggest",
+            "in": "query",
+            "description": "Enable autocomplete suggestions flag.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "doc_type",
+            "in": "query",
+            "description": "Filter by type of document.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DocumentType"
+            }
+          },
+          {
+            "name": "specialty",
+            "in": "query",
+            "description": "Filter by specialty.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Specialty"
+            }
+          },
+          {
+            "name": "edu_level",
+            "in": "query",
+            "description": "Filter by education level.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/EduLevel"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "description": "Filter by Moodle-aligned category ID.",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/CategoryId"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "Filter by standard tags.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "шаблоны"
+            }
+          },
+          {
+            "name": "updated_after",
+            "in": "query",
+            "description": "Filter documents updated after a specific timestamp.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Size of pages for pagination.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful search / retrieval",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Document"
+                      }
+                    },
+                    "totalElements": {
+                      "type": "integer",
+                      "example": 15
+                    },
+                    "totalPages": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "pageNumber": {
+                      "type": "integer",
+                      "example": 0
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "example": 20
+                    },
+                    "suggestions": {
+                      "type": "array",
+                      "description": "Autocomplete hints or spelling corrections if query is partial.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "ФГОС ординатура",
+                        "ФГОС аспирантура"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (insufficient roles for a category)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Upload a new document",
+        "description": "Upload a file along with metadata properties. Restricted to Content Manager and Admin roles.",
+        "tags": [
+          "Documents"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file",
+                  "name",
+                  "doc_type",
+                  "specialty",
+                  "edu_level",
+                  "category_id"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "File payload (PDF, DOCX, XLSX, PPTX, JPG, PNG)."
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Document title.",
+                    "example": "Пример рабочей программы ординатуры"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Summary of the document.",
+                    "example": "Методические материалы по специальности Эпидемиология."
+                  },
+                  "doc_type": {
+                    "$ref": "#/components/schemas/DocumentType"
+                  },
+                  "specialty": {
+                    "$ref": "#/components/schemas/Specialty"
+                  },
+                  "edu_level": {
+                    "$ref": "#/components/schemas/EduLevel"
+                  },
+                  "category_id": {
+                    "$ref": "#/components/schemas/CategoryId"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "ординатура",
+                      "шаблоны"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Document successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters or file format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden for current user role",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/{id}": {
+      "get": {
+        "summary": "Retrieve document details",
+        "description": "Get detailed document profile, history metadata, and standard fields.",
+        "tags": [
+          "Documents"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "9a2fbb22-c35d-4f11-92b1-50e58f00032b"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document successfully retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden (Access control policy violation)"
+          },
+          "404": {
+            "description": "Document not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update document (Create new version)",
+        "description": "Atomic update of metadata, description, or replacement of the physical file payload. Automatically tracks incremented version history.",
+        "tags": [
+          "Documents"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Optional new file payload to increment document version."
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Пример рабочей программы ординатуры v2"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "doc_type": {
+                    "$ref": "#/components/schemas/DocumentType"
+                  },
+                  "specialty": {
+                    "$ref": "#/components/schemas/Specialty"
+                  },
+                  "edu_level": {
+                    "$ref": "#/components/schemas/EduLevel"
+                  },
+                  "category_id": {
+                    "$ref": "#/components/schemas/CategoryId"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "version_comment": {
+                    "type": "string",
+                    "description": "Mandatory message describing the update for version history.",
+                    "example": "Обновление ФГОС по приказу Минобрнауки"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Document updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a document",
+        "description": "Delete a document and its version history. Restricted to Administrators.",
+        "tags": [
+          "Documents"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Document successfully deleted"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        }
+      }
+    },
+    "/documents/{id}/versions": {
+      "get": {
+        "summary": "Retrieve document version history",
+        "description": "Get detailed lists of prior revisions, comments, and creators.",
+        "tags": [
+          "Documents"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of versions retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentVersion"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        }
+      }
+    },
+    "/documents/{id}/export": {
+      "get": {
+        "summary": "Export document content to alternative formats",
+        "description": "Converts or downloads the document payload explicitly in PDF or DOCX format.",
+        "tags": [
+          "Documents"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pdf",
+                "docx"
+              ],
+              "example": "pdf"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary file stream representing exported document.",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string",
+                  "example": "attachment; filename=\"document.pdf\""
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        }
+      }
+    },
+    "/documents/{id}/comments": {
+      "get": {
+        "summary": "Get comments for document",
+        "description": "List discussions or feedback related to the document.",
+        "tags": [
+          "Comments"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comments successfully retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Comment"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        }
+      },
+      "post": {
+        "summary": "Post a comment on the document",
+        "description": "Add feedback, suggestions, or notes to a document.",
+        "tags": [
+          "Comments"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "text"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "example": "Прошу проверить соответствие новой редакции ФГОС."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comment successfully created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        }
+      }
+    },
+    "/documents/{id}/actualization-request": {
+      "post": {
+        "summary": "Send request for document actualization",
+        "description": "Create a task/request indicating that a document needs review or updating.",
+        "tags": [
+          "Documents"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "example": "Приказ Минздрава изменил требования к разделу Эпидемиология."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Actualization request received successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "documentId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "requester": {
+                      "$ref": "#/components/schemas/User"
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "APPROVED",
+                        "REJECTED"
+                      ],
+                      "example": "PENDING"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Document not found"
+          }
+        }
+      }
+    },
+    "/favorites": {
+      "get": {
+        "summary": "List user's favorite documents",
+        "description": "Retrieve the list of documents previously starred/saved by the authenticated user.",
+        "tags": [
+          "Favorites"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Favorites retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Document"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add document to favorites",
+        "description": "Save a document to user's personalized bookmarks.",
+        "tags": [
+          "Favorites"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "documentId"
+                ],
+                "properties": {
+                  "documentId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "9a2fbb22-c35d-4f11-92b1-50e58f00032b"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Added to favorites"
+          },
+          "400": {
+            "description": "Invalid document ID or already marked as favorite"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/favorites/{documentId}": {
+      "delete": {
+        "summary": "Remove document from favorites",
+        "description": "Delete the favorite bookmark.",
+        "tags": [
+          "Favorites"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Favorite not found"
+          }
+        }
+      }
+    },
+    "/saved-searches": {
+      "get": {
+        "summary": "List saved search queries",
+        "description": "Retrieve user's configured search filters and subscriptions for automated updates.",
+        "tags": [
+          "Favorites"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Saved searches retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SavedSearch"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Save a search query",
+        "description": "Save filters and keywords for easy re-triggering or notification alerts.",
+        "tags": [
+          "Favorites"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "queryName",
+                  "q"
+                ],
+                "properties": {
+                  "queryName": {
+                    "type": "string",
+                    "example": "ФГОС Эпидемиология Новые"
+                  },
+                  "q": {
+                    "type": "string",
+                    "example": "ФГОС"
+                  },
+                  "doc_type": {
+                    "$ref": "#/components/schemas/DocumentType"
+                  },
+                  "specialty": {
+                    "$ref": "#/components/schemas/Specialty"
+                  },
+                  "edu_level": {
+                    "$ref": "#/components/schemas/EduLevel"
+                  },
+                  "category_id": {
+                    "$ref": "#/components/schemas/CategoryId"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Search saved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedSearch"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/saved-searches/{id}": {
+      "delete": {
+        "summary": "Delete saved search",
+        "description": "Delete a specific saved query subscription.",
+        "tags": [
+          "Favorites"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Saved search deleted"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/audit-logs": {
+      "get": {
+        "summary": "Retrieve action logs",
+        "description": "View detailed operational history of who performed which actions (creation, modification, deletes) across the platform. Restricted to Admins.",
+        "tags": [
+          "Administration"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/CategoryId"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit logs retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "logs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AuditLogEntry"
+                      }
+                    },
+                    "totalElements": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/statistics": {
+      "get": {
+        "summary": "Usage statistics and analytics",
+        "description": "Export analytics data such as popular query terms, view trends, and download metrics. Restricted to Content Manager and Admin.",
+        "tags": [
+          "Administration"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistics reports compiled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "popularQueries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "query": {
+                            "type": "string",
+                            "example": "ФБУН"
+                          },
+                          "count": {
+                            "type": "integer",
+                            "example": 245
+                          }
+                        }
+                      }
+                    },
+                    "mostViewedDocuments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "documentId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "views": {
+                            "type": "integer",
+                            "example": 189
+                          }
+                        }
+                      }
+                    },
+                    "mostDownloadedDocuments": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "documentId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "downloads": {
+                            "type": "integer",
+                            "example": 94
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "UserRole": {
+        "type": "string",
+        "enum": [
+          "Administrator",
+          "Content-manager",
+          "Teacher",
+          "Student"
+        ],
+        "description": "Mapped user permissions as per system requirements."
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "ca078170-df17-48f8-bca4-d89000a6e87f"
+          },
+          "username": {
+            "type": "string",
+            "example": "ivan.ivanov@epidem.ru"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Иванов Иван Иванович"
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole"
+          }
+        }
+      },
+      "DocumentType": {
+        "type": "string",
+        "enum": [
+          "Regulations",
+          "Forms/Templates",
+          "Protocols",
+          "Curriculum",
+          "Guidelines"
+        ],
+        "description": "DB document types category annotations."
+      },
+      "Specialty": {
+        "type": "string",
+        "enum": [
+          "Epidemiology",
+          "Infectious Diseases",
+          "Pediatrics",
+          "Other"
+        ]
+      },
+      "EduLevel": {
+        "type": "string",
+        "enum": [
+          "Residency",
+          "Postgraduate",
+          "Additional Professional Education"
+        ]
+      },
+      "CategoryId": {
+        "type": "string",
+        "enum": [
+          "edu_center_root",
+          "edu_budget_finance",
+          "edu_staff_workload",
+          "edu_scholarships",
+          "edu_academic_reports"
+        ],
+        "description": "Moodle-aligned category path identifiers."
+      },
+      "Document": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9a2fbb22-c35d-4f11-92b1-50e58f00032b"
+          },
+          "name": {
+            "type": "string",
+            "example": "Strategic Growth Roadmap"
+          },
+          "description": {
+            "type": "string",
+            "example": "Strategic growth goals for FBUN EPIDEM."
+          },
+          "doc_type": {
+            "$ref": "#/components/schemas/DocumentType"
+          },
+          "specialty": {
+            "$ref": "#/components/schemas/Specialty"
+          },
+          "edu_level": {
+            "$ref": "#/components/schemas/EduLevel"
+          },
+          "category_id": {
+            "$ref": "#/components/schemas/CategoryId"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "ординатура",
+              "нормативные акты"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "example": 3
+          },
+          "fileSize": {
+            "type": "integer",
+            "description": "Size in bytes",
+            "example": 245000
+          },
+          "fileType": {
+            "type": "string",
+            "example": "application/pdf"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-03T02:29:26Z"
+          },
+          "updatedBy": {
+            "type": "string",
+            "example": "ivan.ivanov@epidem.ru"
+          }
+        }
+      },
+      "DocumentVersion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionNumber": {
+            "type": "integer",
+            "example": 2
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedBy": {
+            "type": "string",
+            "example": "ivan.ivanov@epidem.ru"
+          },
+          "versionComment": {
+            "type": "string",
+            "example": "Обновление ФГОС по приказу Минобрнауки"
+          },
+          "fileSize": {
+            "type": "integer",
+            "example": 243500
+          }
+        }
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "text": {
+            "type": "string",
+            "example": "Прошу проверить соответствие новой редакции ФГОС."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SavedSearch": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "queryName": {
+            "type": "string",
+            "example": "ФГОС Эпидемиология Новые"
+          },
+          "q": {
+            "type": "string",
+            "example": "ФГОС"
+          },
+          "doc_type": {
+            "$ref": "#/components/schemas/DocumentType"
+          },
+          "specialty": {
+            "$ref": "#/components/schemas/Specialty"
+          },
+          "edu_level": {
+            "$ref": "#/components/schemas/EduLevel"
+          },
+          "category_id": {
+            "$ref": "#/components/schemas/CategoryId"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AuditLogEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string",
+            "example": "ivan.ivanov@epidem.ru"
+          },
+          "action": {
+            "type": "string",
+            "example": "DOCUMENT_UPLOAD"
+          },
+          "resourceId": {
+            "type": "string",
+            "example": "9a2fbb22-c35d-4f11-92b1-50e58f00032b"
+          },
+          "category_id": {
+            "$ref": "#/components/schemas/CategoryId"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": [
+          "error",
+          "message"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "FORBIDDEN"
+          },
+          "message": {
+            "type": "string",
+            "example": "Access is strictly denied by default for all financial and personnel categories."
+          }
+        }
+      }
+    }
+  }
+}
