@@ -1,0 +1,44 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "32901e1d-d8d3-4364-a840-03a32efc3324",
+      "sixSigmaMetric": "Reduce false-positive project stagnation warnings from 1 to 0",
+      "tocConstraintRef": "Project progress calculation bottleneck",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Fix deliverable readiness calculation to correctly evaluate queued tasks and clear the stagnation warning"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch deliverable readiness stagnation calculation",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the readiness calculation fix for this epic, I want to patch the static deliverable state evaluation, so that true progress is tracked and the stagnation warning is resolved",
+          "acceptanceCriteria": "Given a task stuck for >4h that should not block progress\nWhen the deliverable readiness is calculated\nThen the calculation correctly counts the task and clears the stagnation warning",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Readiness metric evaluation logic",
+          "sixSigmaMetric": "Reduce unresolved task state evaluation errors from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "QA for deliverable readiness bugfix",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing QA for this epic, I want to verify the readiness calculation patch, so that the stagnation warning resolution is verified end-to-end",
+          "acceptanceCriteria": "Given a test environment with simulated perpetually queued tasks\nWhen the project observer metric is queried\nThen tests confirm the stagnation warning is correctly resolved and readiness is updated",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Bugfix verification and test coverage",
+          "sixSigmaMetric": "Increase test coverage for deliverable readiness stagnation edge cases from 0 to 1",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
