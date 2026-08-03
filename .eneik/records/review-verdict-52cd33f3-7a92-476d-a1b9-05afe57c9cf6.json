@@ -1,0 +1,40 @@
+{"verdicts": [
+  {
+    "sourceIndex": 0,
+    "verdict": "approve",
+    "criticalReason": "",
+    "concerns": [
+      {
+        "text": "The fileSize (hardcoded to 245000) and fileType (hardcoded to 'application/pdf') in mapToResponse of DocumentController are hardcoded instead of reflecting the actual document metadata.",
+        "severity": "high"
+      },
+      {
+        "text": "DocumentService.searchAndFilterDocuments performs in-memory filtering by parsing JSON metadata using objectMapper.readValue for every document in the subset. This can cause performance degradation as the database grows.",
+        "severity": "medium"
+      },
+      {
+        "text": "DocumentService.recordAuditLog uses UUID.randomUUID().toString() which introduces nondeterminism in ID generation and complicates testing and verification.",
+        "severity": "low"
+      },
+      {
+        "text": "The synonym groups in DocumentService are hardcoded in a static list. This lacks flexibility and requires a code redeployment to modify or add synonyms.",
+        "severity": "low"
+      }
+    ]
+  },
+  {
+    "sourceIndex": 1,
+    "verdict": "approve",
+    "criticalReason": "",
+    "concerns": [
+      {
+        "text": "DefaultEiosClient and NotificationService instantiate RestTemplate inline (new RestTemplate()). It is a best practice to inject RestTemplate or RestTemplateBuilder to allow proper configurations (e.g. timeouts, custom headers, logging).",
+        "severity": "medium"
+      },
+      {
+        "text": "The PR diff includes deleted build artifacts from the target/ directory. While removing them is the correct action, ensuring target/ is properly ignored prevents committing them in the first place.",
+        "severity": "low"
+      }
+    ]
+  }
+]}
