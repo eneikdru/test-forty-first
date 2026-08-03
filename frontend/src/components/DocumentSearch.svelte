@@ -287,6 +287,9 @@
     // Generate suggestions based on titles, tags, and abbreviation matches
     const matches = [];
     documents.forEach(doc => {
+      if (doc.category_id === "edu_budget_finance" && user && user.role === "Student") {
+        return;
+      }
       if (doc.name.toLowerCase().includes(queryLower)) {
         matches.push(doc.name);
       }

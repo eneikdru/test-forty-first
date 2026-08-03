@@ -191,3 +191,46 @@ def test_economist_budget_access_granted(page):
     # Verify successful save
     assert page.locator("#edit-success-msg").is_visible()
     assert "Бюджетный план образовательного центра на 2026 год - Изменено" in page.locator("#drawer-title").inner_text()
+
+
+def test_student_search_financial_document_denied_and_economist_granted(page):
+    # Navigate to the frontend dev server
+    page.goto("http://localhost:3000")
+    page.wait_for_timeout(1000)
+
+    # 1. Login as Student
+    page.select_option("#role", "Student")
+    page.wait_for_timeout(500)
+    page.get_by_role("button", name="Войти в систему").click()
+    page.wait_for_timeout(1000)
+
+    # Locate search input box
+    search_input = page.get_by_placeholder("Поиск по ключевым словам")
+    assert search_input.is_visible()
+
+    # Search for "Бюджетный"
+    search_input.fill("Бюджетный")
+    page.wait_for_timeout(1000)
+
+    # Verify that the budget document is NOT visible to student even when searched for
+    assert not page.locator("text=Бюджетный план").is_visible()
+    assert page.locator("text=Документов по вашему запросу не найдено").is_visible()
+
+    # Logout
+    page.get_by_role("button", name="Выйти").click()
+    page.wait_for_timeout(1000)
+
+    # 2. Login as Economist
+    page.select_option("#role", "Economist")
+    page.wait_for_timeout(500)
+    page.get_by_role("button", name="Войти в систему").click()
+    page.wait_for_timeout(1000)
+
+    # Locate search input box and search for "Бюджетный"
+    search_input = page.get_by_placeholder("Поиск по ключевым словам")
+    assert search_input.is_visible()
+    search_input.fill("Бюджетный")
+    page.wait_for_timeout(1000)
+
+    # Verify that the budget document IS visible and accessible to Economist
+    assert page.get_by_role("heading", name="Бюджетный план образовательного центра на 2026 год").is_visible()
