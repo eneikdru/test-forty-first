@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Moodle Compliance Suite: Financial Visibility</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Hanken+Grotesk:wght@600;700&amp;family=JetBrains+Mono:wght@450&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary": "#000000",
+                    "on-background": "#191c1e",
+                    "outline": "#76777d",
+                    "on-error": "#ffffff",
+                    "primary-fixed": "#dae2fd",
+                    "surface-variant": "#e0e3e5",
+                    "primary": "#000000",
+                    "secondary-fixed": "#d5e3fd",
+                    "error": "#ba1a1a",
+                    "on-surface": "#191c1e",
+                    "on-tertiary-fixed-variant": "#38485d",
+                    "on-primary-container": "#7c839b",
+                    "secondary-fixed-dim": "#b9c7e0",
+                    "outline-variant": "#c6c6cd",
+                    "surface-container-highest": "#e0e3e5",
+                    "inverse-primary": "#bec6e0",
+                    "tertiary-container": "#0b1c30",
+                    "on-primary-fixed": "#131b2e",
+                    "surface-dim": "#d8dadc",
+                    "surface-bright": "#f7f9fb",
+                    "background": "#f7f9fb",
+                    "surface-tint": "#565e74",
+                    "on-surface-variant": "#45464d",
+                    "tertiary-fixed": "#d3e4fe",
+                    "surface-container-high": "#e6e8ea",
+                    "on-secondary-fixed": "#0d1c2f",
+                    "secondary": "#515f74",
+                    "on-secondary": "#ffffff",
+                    "secondary-container": "#d5e3fd",
+                    "tertiary-fixed-dim": "#b7c8e1",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "on-tertiary-fixed": "#0b1c30",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-secondary-fixed-variant": "#3a485c",
+                    "on-tertiary-container": "#75859d",
+                    "surface-container": "#eceef0",
+                    "error-container": "#ffdad6",
+                    "inverse-surface": "#2d3133",
+                    "on-secondary-container": "#57657b",
+                    "primary-container": "#131b2e",
+                    "on-tertiary": "#ffffff",
+                    "primary-fixed-dim": "#bec6e0",
+                    "on-error-container": "#93000a",
+                    "on-primary": "#ffffff",
+                    "surface-container-low": "#f2f4f6",
+                    "surface": "#f7f9fb"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "base": "4px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "gutter": "16px",
+                    "container-max": "1440px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Inter"],
+                    "title-sm": ["Hanken Grotesk"],
+                    "body-md": ["Inter"],
+                    "code-sm": ["JetBrains Mono"],
+                    "body-sm": ["Inter"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "code-sm": ["12px", {"lineHeight": "16px", "fontWeight": "450"}],
+                    "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f7f9fb;
+            color: #191c1e;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .log-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        .log-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .log-container::-webkit-scrollbar-thumb {
+            background: #c6c6cd;
+            border-radius: 10px;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 16px;
+        }
+        @media (max-width: 767px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline flex items-center justify-between px-md h-16 shadow-sm">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed" data-icon="speed">speed</span>
+<h1 class="font-display-lg text-headline-md text-primary dark:text-primary-fixed tracking-tight">Moodle Test Runner</h1>
+</div>
+<div class="flex items-center gap-md">
+<span class="hidden md:block font-label-caps text-on-surface-variant">V2.4.0 COMPLIANT</span>
+<div class="cursor-pointer active:opacity-80 hover:bg-surface-container-high p-2 transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</div>
+</div>
+</header>
+<div class="flex flex-col md:flex-row min-h-[calc(100vh-64px)]">
+<!-- NavigationDrawer (Suppressed on deep task screens, but kept here as sidebar for Desktop dashboard context) -->
+<aside class="hidden md:flex flex-col gap-xs p-md h-auto w-64 bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant dark:border-outline">
+<div class="mb-lg px-sm">
+<p class="font-label-caps text-outline uppercase">Suite Context</p>
+<h2 class="font-title-sm text-title-sm text-primary">QA Engine</h2>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-md p-md rounded-lg text-primary dark:text-primary-fixed font-bold border-r-4 border-primary bg-primary-fixed/10 transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md p-md rounded-lg text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="rule">rule</span>
+<span class="font-body-md">Test Suites</span>
+</a>
+<a class="flex items-center gap-md p-md rounded-lg text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="terminal">terminal</span>
+<span class="font-body-md">Audit Logs</span>
+</a>
+<a class="flex items-center gap-md p-md rounded-lg text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+<span class="font-body-md">Compliance</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 p-md md:p-lg lg:p-xl space-y-lg max-w-container-max mx-auto w-full">
+<!-- Page Header Area -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-xl">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Moodle Compliance Suite</h2>
+<p class="font-body-sm text-outline">Project: Financial Visibility Verification • Active Session #8821</p>
+</div>
+<div class="flex items-center gap-sm">
+<button class="bg-secondary-container text-on-secondary-container px-lg py-sm font-label-caps rounded hover:bg-outline-variant transition-colors">
+                        VIEW REPORT
+                    </button>
+<button class="bg-primary text-on-primary px-lg py-sm font-label-caps rounded hover:bg-tertiary transition-colors shadow-lg">
+                        ABORT TEST
+                    </button>
+</div>
+</div>
+<!-- Bento Layout Content -->
+<div class="bento-grid">
+<!-- Live Runner View (Large Left) -->
+<div class="md:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col min-h-[400px]">
+<div class="bg-surface-container-high px-md py-sm border-b border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-sm">
+<span class="w-3 h-3 bg-error rounded-full animate-pulse"></span>
+<span class="font-label-caps text-on-surface">LIVE RUNNER: FINANCIAL_ACCESS_ECHO</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm" data-icon="language">language</span>
+<span class="font-code-sm text-outline">Browser: Chromium x64</span>
+</div>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center relative p-xl bg-slate-50">
+<!-- Browser Simulation Mockup -->
+<div class="w-full max-w-2xl aspect-video bg-white shadow-xl rounded-lg border border-outline-variant overflow-hidden flex flex-col">
+<div class="h-8 bg-surface-container-highest flex items-center px-sm gap-2">
+<div class="flex gap-1.5">
+<div class="w-2.5 h-2.5 rounded-full bg-outline-variant"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-outline-variant"></div>
+<div class="w-2.5 h-2.5 rounded-full bg-outline-variant"></div>
+</div>
+<div class="bg-surface-container-lowest flex-1 h-5 rounded-sm mx-4 border border-outline-variant text-[10px] flex items-center px-2 text-outline">
+                                    moodle.internal/admin/finance/invoices?id=2024_001
+                                </div>
+</div>
+<div class="flex-1 p-lg flex flex-col gap-md opacity-40">
+<div class="h-4 w-1/2 bg-surface-container"></div>
+<div class="h-32 w-full bg-surface-container-low rounded-lg border border-dashed border-outline"></div>
+<div class="grid grid-cols-3 gap-md">
+<div class="h-24 bg-surface-container-high rounded"></div>
+<div class="h-24 bg-surface-container-high rounded"></div>
+<div class="h-24 bg-surface-container-high rounded"></div>
+</div>
+</div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="bg-white/80 backdrop-blur-sm border border-primary p-md rounded-xl flex flex-col items-center gap-md shadow-2xl">
+<span class="material-symbols-outlined text-display-lg text-primary animate-bounce" data-icon="search_insights" style="font-variation-settings: 'FILL' 1;">search_insights</span>
+<p class="font-body-md font-bold text-primary">Validating Access Control List...</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Progress Metric (Top Right) -->
+<div class="md:col-span-4 bg-primary-container text-on-primary-fixed p-lg rounded-xl flex flex-col justify-between border border-primary">
+<div>
+<div class="flex justify-between items-start">
+<span class="font-label-caps opacity-70">VERIFICATION PROGRESS</span>
+<span class="material-symbols-outlined" data-icon="trending_up">trending_up</span>
+</div>
+<h3 class="text-4xl font-display-lg mt-md">3 / 5 <span class="text-lg opacity-50">Tests Passed</span></h3>
+</div>
+<div class="mt-xl">
+<div class="w-full bg-on-primary-fixed-variant/20 h-2 rounded-full overflow-hidden">
+<div class="bg-primary-fixed h-full w-[60%] transition-all duration-1000 ease-in-out"></div>
+</div>
+<p class="font-body-sm mt-sm opacity-70">Current Phase: Role-Based Policy Injection</p>
+</div>
+</div>
+<!-- Test Cases (Bottom Left) -->
+<div class="md:col-span-7 bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+<h4 class="font-label-caps text-on-surface mb-md">ACTIVE TEST QUEUE</h4>
+<div class="space-y-sm">
+<!-- PASS -->
+<div class="flex items-center justify-between p-sm border-b border-outline-variant hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+<span class="material-symbols-outlined text-base" data-icon="check" style="font-variation-settings: 'wght' 700;">check</span>
+</div>
+<div>
+<p class="font-body-md font-semibold">User 'Student' restricted from 'Faculty Invoices'</p>
+<p class="font-body-sm text-outline">Access Control Exception: Expected 403, Got 403</p>
+</div>
+</div>
+<span class="px-sm py-1 bg-green-100 text-green-800 font-label-caps text-[10px] rounded border border-green-200">PASS</span>
+</div>
+<!-- PASS -->
+<div class="flex items-center justify-between p-sm border-b border-outline-variant hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+<span class="material-symbols-outlined text-base" data-icon="check" style="font-variation-settings: 'wght' 700;">check</span>
+</div>
+<div>
+<p class="font-body-md font-semibold">User 'Accountant' granted 'Fee Receipts'</p>
+<p class="font-body-sm text-outline">Validation: Resource accessible with valid token</p>
+</div>
+</div>
+<span class="px-sm py-1 bg-green-100 text-green-800 font-label-caps text-[10px] rounded border border-green-200">PASS</span>
+</div>
+<!-- RUNNING -->
+<div class="flex items-center justify-between p-sm border-b border-outline-variant bg-surface-container-low ring-1 ring-primary/20">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white animate-pulse">
+<span class="material-symbols-outlined text-base" data-icon="sync" style="font-variation-settings: 'wght' 400;">sync</span>
+</div>
+<div>
+<p class="font-body-md font-semibold">User 'Guest' restricted from 'Financial Statements'</p>
+<p class="font-body-sm text-primary">Simulation: Fetching DOM elements...</p>
+</div>
+</div>
+<span class="px-sm py-1 bg-primary text-on-primary font-label-caps text-[10px] rounded">RUNNING</span>
+</div>
+<!-- PENDING -->
+<div class="flex items-center justify-between p-sm opacity-50">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full bg-outline-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-base" data-icon="schedule">schedule</span>
+</div>
+<div>
+<p class="font-body-md font-semibold">Cross-role visibility audit</p>
+<p class="font-body-sm text-outline">Queued: Dependent on 'Guest' status</p>
+</div>
+</div>
+<span class="px-sm py-1 bg-surface-container text-on-surface-variant font-label-caps text-[10px] rounded border border-outline-variant">PENDING</span>
+</div>
+</div>
+</div>
+<!-- Activity Log (Bottom Right) -->
+<div class="md:col-span-5 bg-tertiary-container text-on-tertiary-container rounded-xl flex flex-col max-h-[320px]">
+<div class="px-md py-sm border-b border-outline/20 flex items-center justify-between">
+<span class="font-label-caps">ACTIVITY LOG</span>
+<span class="font-code-sm text-on-tertiary-container/60">LIVE STREAM</span>
+</div>
+<div class="log-container overflow-y-auto p-md font-code-sm space-y-2 flex-1">
+<div class="flex gap-sm">
+<span class="text-outline-variant">[14:20:01]</span>
+<span class="text-green-400">SUCCESS</span>
+<span>Navigating to Moodle login...</span>
+</div>
+<div class="flex gap-sm">
+<span class="text-outline-variant">[14:20:04]</span>
+<span class="text-green-400">SUCCESS</span>
+<span>Authenticating as Student_User...</span>
+</div>
+<div class="flex gap-sm">
+<span class="text-outline-variant">[14:20:06]</span>
+<span class="text-blue-400">INFO</span>
+<span>Parsing endpoint: /finance/download</span>
+</div>
+<div class="flex gap-sm">
+<span class="text-outline-variant">[14:20:08]</span>
+<span class="text-green-400">SUCCESS</span>
+<span>Checking visibility of Invoice_2024.pdf...</span>
+</div>
+<div class="flex gap-sm">
+<span class="text-outline-variant">[14:20:10]</span>
+<span class="text-purple-400">ASSERT</span>
+<span>Asserting 403 Forbidden...</span>
+</div>
+<div class="flex gap-sm italic text-outline">
+<span class="text-outline-variant">[14:20:12]</span>
+<span>Switching context to Guest_User context...</span>
+</div>
+<div class="flex gap-sm animate-pulse">
+<span class="text-outline-variant">[14:20:15]</span>
+<span class="text-yellow-400">EXEC</span>
+<span>Injecting role: GUEST_PUBLIC</span>
+</div>
+<!-- Mock scroll padding -->
+<div class="h-4"></div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="w-full bg-surface-container dark:bg-tertiary-container border-t border-outline-variant dark:border-outline flex justify-between items-center px-lg py-sm">
+<p class="font-body-sm text-on-surface-variant dark:text-on-tertiary-container">
+            © 2024 Moodle Compliance Automator <span class="font-label-caps ml-2 opacity-50">v2.4.0</span>
+</p>
+<div class="flex gap-lg">
+<a class="font-body-sm text-on-surface-variant dark:text-on-tertiary-container hover:text-primary dark:hover:text-primary-fixed transition-opacity transition-colors" href="#">Documentation</a>
+<a class="font-body-sm text-on-surface-variant dark:text-on-tertiary-container hover:text-primary dark:hover:text-primary-fixed transition-opacity transition-colors" href="#">System Status</a>
+</div>
+</footer>
+<script>
+        // Micro-interaction for Log scrolling
+        const logContainer = document.querySelector('.log-container');
+        if (logContainer) {
+            setInterval(() => {
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }, 3000);
+        }
+
+        // Simulating some "running" state changes
+        const runningIndicator = document.querySelector('.animate-bounce');
+        if (runningIndicator) {
+            let toggle = true;
+            setInterval(() => {
+                runningIndicator.style.opacity = toggle ? '0.7' : '1';
+                toggle = !toggle;
+            }, 800);
+        }
+    </script>
+</body></html>
