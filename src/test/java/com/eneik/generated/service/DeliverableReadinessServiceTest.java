@@ -38,30 +38,32 @@ public class DeliverableReadinessServiceTest {
     public void testCalculateReadinessRatioAndAtomicUpdate() {
         String cycleId = "cycle-1";
 
-        // Add 3 deliverables, 2 resolved, 1 pending. Ratio: 2/3 = ~0.67
+        // Add 4 deliverables, 1 resolved, 1 done, 1 settled (all terminal/resolved), 1 pending. Ratio: 3/4 = 0.75
         Deliverable d1 = new Deliverable(cycleId, "resolved");
-        Deliverable d2 = new Deliverable(cycleId, "resolved");
-        Deliverable d3 = new Deliverable(cycleId, "pending");
+        Deliverable d2 = new Deliverable(cycleId, "done");
+        Deliverable d3 = new Deliverable(cycleId, "settled");
+        Deliverable d4 = new Deliverable(cycleId, "pending");
 
         deliverableRepository.save(d1);
         deliverableRepository.save(d2);
-        d3 = deliverableRepository.save(d3);
+        deliverableRepository.save(d3);
+        d4 = deliverableRepository.save(d4);
 
         entityManager.flush();
         entityManager.clear();
 
         float initialRatio = deliverableReadinessService.calculateReadinessRatio(cycleId);
-        assertEquals(0.6666f, initialRatio, 0.001f, "Initial readiness ratio should be ~0.67");
+        assertEquals(0.75f, initialRatio, 0.001f, "Initial readiness ratio should be 0.75 (3 out of 4 resolved states)");
 
         // Atomically update the pending deliverable to resolved
-        boolean resolved = deliverableReadinessService.resolveItem(d3.getId());
+        boolean resolved = deliverableReadinessService.resolveItem(d4.getId());
         assertTrue(resolved, "Deliverable should be resolved successfully");
 
         entityManager.flush();
         entityManager.clear();
 
         // Attempting to resolve again should fail because it's no longer 'pending'
-        boolean resolvedAgain = deliverableReadinessService.resolveItem(d3.getId());
+        boolean resolvedAgain = deliverableReadinessService.resolveItem(d4.getId());
         assertFalse(resolvedAgain, "Deliverable should not be resolved again");
 
         entityManager.flush();
