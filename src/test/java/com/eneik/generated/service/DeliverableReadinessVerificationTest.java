@@ -29,9 +29,9 @@ public class DeliverableReadinessVerificationTest {
     @Test
     public void testReadinessMetricIncreasesAbove67Percent() {
         // Given the tracking patch is deployed,
-        // (State before resolution: 2 resolved out of 3 total = ~66.7%)
-        Deliverable d1 = new Deliverable(cycleId, "resolved");
-        Deliverable d2 = new Deliverable(cycleId, "resolved");
+        // (State before resolution: 2 terminal states out of 3 total = ~66.7%)
+        Deliverable d1 = new Deliverable(cycleId, "done");
+        Deliverable d2 = new Deliverable(cycleId, "confirmed");
         Deliverable d3 = new Deliverable(cycleId, "pending");
 
         List<Deliverable> initialDeliverables = Arrays.asList(d1, d2, d3);

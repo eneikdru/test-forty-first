@@ -37,7 +37,7 @@ public class DeliverableReadinessService {
         }
 
         long resolvedCount = cycleDeliverables.stream()
-                .filter(d -> "resolved".equals(d.getStatus()))
+                .filter(d -> !"pending".equals(d.getStatus()))
                 .count();
 
         return (float) resolvedCount / cycleDeliverables.size();
