@@ -1,8 +1,15 @@
 /app/src/main/java/com/eneik/generated/Application.java
 /app/src/main/java/com/eneik/generated/model/Document.java
 /app/src/main/java/com/eneik/generated/model/DocumentVersion.java
+/app/src/main/java/com/eneik/generated/model/EiosExportRecord.java
+/app/src/main/java/com/eneik/generated/model/ExternalLmsDocument.java
+/app/src/main/java/com/eneik/generated/model/LmsLink.java
 /app/src/main/java/com/eneik/generated/model/Role.java
+/app/src/main/java/com/eneik/generated/model/UserAnalytics.java
 /app/src/main/java/com/eneik/generated/repository/DocumentRepository.java
 /app/src/main/java/com/eneik/generated/repository/DocumentVersionRepository.java
+/app/src/main/java/com/eneik/generated/repository/LmsLinkRepository.java
 /app/src/main/java/com/eneik/generated/repository/RoleRepository.java
+/app/src/main/java/com/eneik/generated/repository/UserAnalyticsRepository.java
 /app/src/main/java/com/eneik/generated/service/DocumentService.java
+/app/src/main/java/com/eneik/generated/service/LmsIntegrationService.java

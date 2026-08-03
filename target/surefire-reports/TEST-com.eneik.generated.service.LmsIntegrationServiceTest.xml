@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.eneik.generated.MigrationTest" time="0.755" tests="1" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.eneik.generated.service.LmsIntegrationServiceTest" time="7.306" tests="2" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="21"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -43,7 +43,7 @@
     <property name="localRepository" value="/home/jules/.m2/repository"/>
     <property name="java.vendor.url.bug" value="https://bugs.launchpad.net/ubuntu/+source/openjdk-21"/>
     <property name="java.io.tmpdir" value="/tmp"/>
-    <property name="com.zaxxer.hikari.pool_number" value="2"/>
+    <property name="com.zaxxer.hikari.pool_number" value="1"/>
     <property name="java.version" value="21.0.10"/>
     <property name="user.dir" value="/app"/>
     <property name="os.arch" value="amd64"/>
@@ -60,9 +60,9 @@
     <property name="java.class.version" value="65.0"/>
     <property name="LOGGED_APPLICATION_NAME" value="[app] "/>
   </properties>
-  <testcase name="testMigration" classname="com.eneik.generated.MigrationTest" time="0.01">
-    <system-out><![CDATA[2026-08-03T03:26:25.451Z  INFO 55396 --- [app] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.eneik.generated.MigrationTest]: MigrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-08-03T03:26:25.460Z  INFO 55396 --- [app] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.eneik.generated.Application for test class com.eneik.generated.MigrationTest
+  <testcase name="testIndexExternalLmsDocumentMapsToUnifiedSearchSchema" classname="com.eneik.generated.service.LmsIntegrationServiceTest" time="0.95">
+    <system-out><![CDATA[03:26:18.234 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.eneik.generated.service.LmsIntegrationServiceTest]: LmsIntegrationServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+03:26:18.360 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.eneik.generated.Application for test class com.eneik.generated.service.LmsIntegrationServiceTest
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -73,32 +73,35 @@
 
  :: Spring Boot ::                (v3.3.2)
 
-2026-08-03T03:26:25.503Z  INFO 55396 --- [app] [           main] com.eneik.generated.MigrationTest        : Starting MigrationTest using Java 21.0.10 with PID 55396 (started by jules in /app)
-2026-08-03T03:26:25.503Z  INFO 55396 --- [app] [           main] com.eneik.generated.MigrationTest        : No active profile set, falling back to 1 default profile: "default"
-2026-08-03T03:26:25.646Z  INFO 55396 --- [app] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-08-03T03:26:25.657Z  INFO 55396 --- [app] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 10 ms. Found 5 JPA repository interfaces.
-2026-08-03T03:26:25.749Z  INFO 55396 --- [app] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
-2026-08-03T03:26:25.753Z  INFO 55396 --- [app] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection conn11: url=jdbc:h2:mem:testdb user=SA
-2026-08-03T03:26:25.753Z  INFO 55396 --- [app] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
-2026-08-03T03:26:25.754Z  INFO 55396 --- [app] [           main] o.f.c.i.resource.ResourceNameValidator   : 1 SQL migrations were detected but not run because they did not follow the filename convention.
-2026-08-03T03:26:25.754Z  INFO 55396 --- [app] [           main] o.f.c.i.resource.ResourceNameValidator   : Set 'validateMigrationNaming' to true to fail fast and see a list of the invalid file names.
-2026-08-03T03:26:25.756Z  INFO 55396 --- [app] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:h2:mem:testdb (H2 2.2)
-2026-08-03T03:26:25.758Z  WARN 55396 --- [app] [           main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: H2 2.2.224 is newer than this version of Flyway and support has not been tested. The latest supported version of H2 is 2.2.220.
-2026-08-03T03:26:25.760Z  INFO 55396 --- [app] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
-2026-08-03T03:26:25.761Z  INFO 55396 --- [app] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 3 migrations (execution time 00:00.002s)
-2026-08-03T03:26:25.764Z  INFO 55396 --- [app] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "PUBLIC"."flyway_schema_history" ...
-2026-08-03T03:26:25.786Z  INFO 55396 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "PUBLIC": << Empty Schema >>
-2026-08-03T03:26:25.795Z  INFO 55396 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "20260803022641879 - init"
-2026-08-03T03:26:25.812Z  INFO 55396 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "20260803023320490 - lms links and analytics"
-2026-08-03T03:26:25.839Z  INFO 55396 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "20260803023320809 - moodle financial extensions"
-2026-08-03T03:26:25.850Z  INFO 55396 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 3 migrations to schema "PUBLIC", now at version v20260803023320809 (execution time 00:00.016s)
-2026-08-03T03:26:25.870Z  INFO 55396 --- [app] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2026-08-03T03:26:25.872Z  INFO 55396 --- [app] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-08-03T03:26:25.880Z  INFO 55396 --- [app] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-08-03T03:26:25.986Z  INFO 55396 --- [app] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-08-03T03:26:25.988Z  INFO 55396 --- [app] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-08-03T03:26:26.101Z  WARN 55396 --- [app] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-08-03T03:26:26.191Z  INFO 55396 --- [app] [           main] com.eneik.generated.MigrationTest        : Started MigrationTest in 0.713 seconds (process running for 8.795)
+2026-08-03T03:26:18.773Z  INFO 55396 --- [app] [           main] c.e.g.service.LmsIntegrationServiceTest  : Starting LmsIntegrationServiceTest using Java 21.0.10 with PID 55396 (started by jules in /app)
+2026-08-03T03:26:18.775Z  INFO 55396 --- [app] [           main] c.e.g.service.LmsIntegrationServiceTest  : No active profile set, falling back to 1 default profile: "default"
+2026-08-03T03:26:19.492Z  INFO 55396 --- [app] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-03T03:26:19.566Z  INFO 55396 --- [app] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 62 ms. Found 5 JPA repository interfaces.
+2026-08-03T03:26:20.209Z  INFO 55396 --- [app] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-08-03T03:26:20.670Z  INFO 55396 --- [app] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn1: url=jdbc:h2:file:./data/appdb user=
+2026-08-03T03:26:20.672Z  INFO 55396 --- [app] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-08-03T03:26:20.701Z  INFO 55396 --- [app] [           main] o.f.c.i.resource.ResourceNameValidator   : 1 SQL migrations were detected but not run because they did not follow the filename convention.
+2026-08-03T03:26:20.701Z  INFO 55396 --- [app] [           main] o.f.c.i.resource.ResourceNameValidator   : Set 'validateMigrationNaming' to true to fail fast and see a list of the invalid file names.
+2026-08-03T03:26:20.737Z  INFO 55396 --- [app] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:h2:file:./data/appdb (H2 2.2)
+2026-08-03T03:26:20.754Z  WARN 55396 --- [app] [           main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: H2 2.2.224 is newer than this version of Flyway and support has not been tested. The latest supported version of H2 is 2.2.220.
+2026-08-03T03:26:20.799Z  INFO 55396 --- [app] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 3 migrations (execution time 00:00.032s)
+2026-08-03T03:26:20.810Z  INFO 55396 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "PUBLIC": 20260803023320809
+2026-08-03T03:26:20.813Z  INFO 55396 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Schema "PUBLIC" is up to date. No migration necessary.
+2026-08-03T03:26:20.935Z  INFO 55396 --- [app] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-08-03T03:26:21.013Z  INFO 55396 --- [app] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.2.Final
+2026-08-03T03:26:21.057Z  INFO 55396 --- [app] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-08-03T03:26:21.454Z  INFO 55396 --- [app] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-08-03T03:26:22.654Z  INFO 55396 --- [app] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-08-03T03:26:22.688Z  INFO 55396 --- [app] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-08-03T03:26:23.040Z  INFO 55396 --- [app] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-08-03T03:26:23.763Z  WARN 55396 --- [app] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-08-03T03:26:24.331Z  INFO 55396 --- [app] [           main] c.e.g.service.LmsIntegrationServiceTest  : Started LmsIntegrationServiceTest in 5.825 seconds (process running for 6.935)
 ]]></system-out>
+    <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (/home/jules/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.18/byte-buddy-agent-1.14.18.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
   </testcase>
+  <testcase name="testRecordUserAnalyticsSupportsEiosExportFormats" classname="com.eneik.generated.service.LmsIntegrationServiceTest" time="0.018"/>
 </testsuite>

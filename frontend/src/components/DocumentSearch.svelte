@@ -426,9 +426,9 @@
 
   // Format File Size
   function formatBytes(bytes) {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return '0 Байт';
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
+    const sizes = ['Байт', 'КБ', 'МБ'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
@@ -802,51 +802,55 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               {#each filteredDocuments as doc}
                 <div
-                  class="bg-surface-container border border-outline-variant p-5 rounded group hover:bg-surface-container-high hover:border-primary transition-all duration-200 flex flex-col justify-between cursor-pointer focus-within:ring-2 focus-within:ring-primary outline-none"
-                  on:click={() => openDocumentDetails(doc)}
-                  on:keydown={(e) => e.key === 'Enter' && openDocumentDetails(doc)}
-                  tabindex="0"
-                  role="button"
-                  aria-label="Просмотреть подробности документа {doc.name}"
+                  class="bg-surface-container border border-outline-variant p-5 rounded group hover:bg-surface-container-high hover:border-primary transition-all duration-200 flex flex-col justify-between focus-within:ring-2 focus-within:ring-primary outline-none relative"
                 >
-                  <div class="space-y-3">
-                    <div class="flex justify-between items-start gap-3">
-                      <h4 class="font-headline-md text-base md:text-lg text-[#d4e4fa] group-hover:text-primary transition-colors font-bold line-clamp-2">
-                        {doc.name}
-                      </h4>
-                      <button
-                        on:click|stopPropagation={() => toggleFavorite(doc.id)}
-                        class="text-on-surface-variant hover:text-yellow-400 transition-colors"
-                        aria-label={favorites.includes(doc.id) ? "Удалить из избранного" : "Добавить в избранное"}
-                      >
-                        <span class="material-symbols-outlined text-xl" class:text-yellow-400={favorites.includes(doc.id)}>
-                          {favorites.includes(doc.id) ? 'star' : 'star_border'}
-                        </span>
-                      </button>
+                  <!-- Semantic absolute-positioned overlay button for keyboard focus & detail triggers -->
+                  <button
+                    on:click={() => openDocumentDetails(doc)}
+                    class="absolute inset-0 w-full h-full cursor-pointer bg-transparent border-0 outline-none rounded z-10"
+                    aria-label="Просмотреть подробности документа {doc.name}"
+                  ></button>
+
+                  <div class="space-y-3 relative z-20 pointer-events-none flex flex-col flex-1 justify-between">
+                    <div>
+                      <div class="flex justify-between items-start gap-3">
+                        <h4 class="font-headline-md text-base md:text-lg text-[#d4e4fa] group-hover:text-primary transition-colors font-bold line-clamp-2">
+                          {doc.name}
+                        </h4>
+                        <button
+                          on:click|stopPropagation={() => toggleFavorite(doc.id)}
+                          class="text-on-surface-variant hover:text-yellow-400 transition-colors pointer-events-auto relative z-30"
+                          aria-label={favorites.includes(doc.id) ? "Удалить из избранного" : "Добавить в избранное"}
+                        >
+                          <span class="material-symbols-outlined text-xl" class:text-yellow-400={favorites.includes(doc.id)}>
+                            {favorites.includes(doc.id) ? 'star' : 'star_border'}
+                          </span>
+                        </button>
+                      </div>
+
+                      <p class="text-xs text-on-surface-variant line-clamp-3 leading-relaxed mt-3">
+                        {doc.description}
+                      </p>
                     </div>
 
-                    <p class="text-xs text-on-surface-variant line-clamp-3 leading-relaxed">
-                      {doc.description}
-                    </p>
-                  </div>
+                    <div class="pt-4 space-y-3 border-t border-outline-variant/50 mt-4">
+                      <!-- Tags -->
+                      <div class="flex flex-wrap gap-1">
+                        {#each doc.tags as t}
+                          <span class="text-[10px] font-bold uppercase tracking-wider bg-surface-variant text-secondary px-1.5 py-0.5 rounded-sm">
+                            {t}
+                          </span>
+                        {/each}
+                      </div>
 
-                  <div class="pt-4 space-y-3 border-t border-outline-variant/50 mt-4">
-                    <!-- Tags -->
-                    <div class="flex flex-wrap gap-1">
-                      {#each doc.tags as t}
-                        <span class="text-[10px] font-bold uppercase tracking-wider bg-surface-variant text-secondary px-1.5 py-0.5 rounded-sm">
-                          {t}
+                      <!-- Meta specs -->
+                      <div class="flex justify-between items-center text-[11px] text-[#869397] font-semibold">
+                        <span class="flex items-center gap-1">
+                          <span class="material-symbols-outlined text-xs">history</span>
+                          v{doc.version}
                         </span>
-                      {/each}
-                    </div>
-
-                    <!-- Meta specs -->
-                    <div class="flex justify-between items-center text-[11px] text-[#869397] font-semibold">
-                      <span class="flex items-center gap-1">
-                        <span class="material-symbols-outlined text-xs">history</span>
-                        v{doc.version}
-                      </span>
-                      <span>{getEduLevelLabel(doc.edu_level)}</span>
+                        <span>{getEduLevelLabel(doc.edu_level)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
