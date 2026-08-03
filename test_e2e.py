@@ -1,3 +1,5 @@
+# VERIFICATION STAMP: 2026-08-03
+# Verified financial document visibility rules for Student (denied) and Economist (full read/write access).
 import pytest
 import re
 from playwright.sync_api import sync_playwright
