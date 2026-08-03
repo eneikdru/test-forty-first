@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html class="light" lang="ru">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Центр Знаний | ТЕСТ-ФОРТИ-ФЁРСТ</title>
+    <!-- Fonts: Strictly Inter and JetBrains Mono -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+    <!-- Material Symbols for elegant icon representation -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#1A365D", // Lexicon Flux Navy Token
+                    "primary-hover": "#13294B",
+                    "on-primary": "#FFFFFF",
+                    "primary-container": "#E3ECF5",
+                    "on-primary-container": "#0D1E36",
+                    "secondary": "#3B7A94", // Teal-ish blue from mockup
+                    "secondary-hover": "#2C5D72",
+                    "on-secondary": "#FFFFFF",
+                    "background": "#F3F4F6", // Light grey background
+                    "surface": "#FFFFFF",    // White panel surface
+                    "on-background": "#1F2937",
+                    "on-surface": "#1F2937",
+                    "on-surface-variant": "#4B5563",
+                    "outline": "#D1D5DB",
+                    "outline-variant": "#E5E7EB",
+                    "error": "#EF4444"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.375rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "label-caps": ["JetBrains Mono"]
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+        body {
+            background-color: #F3F4F6;
+            color: #1F2937;
+            -webkit-font-smoothing: antialiased;
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden flex flex-col justify-between min-h-screen">
+
+    <!-- ГРУППА 1: Шапка сайта (Top App Bar) -->
+    <header class="w-full bg-white border-b border-gray-200 flex justify-between items-center px-6 h-16 shadow-sm">
+        <div class="flex items-center gap-4">
+            <button class="h-11 w-11 flex items-center justify-center text-gray-700 hover:bg-gray-100 active:scale-95 transition-all rounded-lg" aria-label="Меню навигации">
+                <span class="material-symbols-outlined text-2xl">menu</span>
+            </button>
+            <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-700">
+                <a class="text-primary border-b-2 border-primary pb-1 font-bold" href="#">Документы</a>
+                <a class="hover:text-primary transition-colors pb-1" href="#">Проекты</a>
+                <a class="hover:text-primary transition-colors pb-1" href="#">База Знаний</a>
+            </nav>
+        </div>
+
+        <div class="text-center">
+            <h1 class="font-headline-md text-lg font-bold text-primary tracking-wide">
+                ЦЕНТР ЗНАНИЙ [Тест-Форти-Фёрст]
+            </h1>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <button class="flex items-center gap-1.5 text-sm text-gray-700 hover:text-primary transition-colors h-11 px-3 rounded-lg hover:bg-gray-100 active:scale-95 transition-all">
+                <span class="material-symbols-outlined text-xl">account_circle</span>
+                <span class="font-medium hidden sm:inline">Профиль</span>
+            </button>
+            <button class="flex items-center gap-1.5 text-sm text-gray-700 hover:text-primary transition-colors h-11 px-3 rounded-lg hover:bg-gray-100 active:scale-95 transition-all">
+                <span class="material-symbols-outlined text-xl">logout</span>
+                <span class="font-medium hidden sm:inline">Выход</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Основная сетка контента (Сгруппирована согласно Закону Миллера) -->
+    <div class="flex-grow max-w-[1440px] w-full mx-auto px-6 py-8 grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+
+        <!-- ГРУППА 2: Левая боковая панель (Sidebar Filters) -->
+        <aside class="lg:col-span-1 bg-white rounded-xl p-6 border border-gray-200 space-y-6 shadow-sm">
+
+            <!-- Кнопка Новый Документ -->
+            <button id="btn-new-document" class="w-full h-11 flex items-center justify-center gap-2 bg-[#1A365D] hover:bg-primary-hover text-white font-bold rounded-lg active:scale-95 transition-all shadow-md">
+                <span class="material-symbols-outlined text-xl">add</span>
+                <span>НОВЫЙ ДОКУМЕНТ</span>
+            </button>
+
+            <!-- Поиск -->
+            <div class="space-y-2">
+                <label for="search-input" class="text-xs font-label-caps text-gray-500 font-bold tracking-wider block uppercase">ПОИСК</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                        <span class="material-symbols-outlined text-xl">search</span>
+                    </span>
+                    <input id="search-input" type="text" placeholder="Поиск по названию или тегам..." class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A365D] h-11 transition-all"/>
+                </div>
+            </div>
+
+            <!-- Разделы -->
+            <div class="space-y-1">
+                <button id="filter-all" class="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold bg-gray-100 text-[#1A365D] flex items-center gap-2 transition-all">
+                    <span class="material-symbols-outlined text-lg">folder_open</span>
+                    <span>ВСЕ ДОКУМЕНТЫ</span>
+                </button>
+                <button id="filter-my" class="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2 transition-all">
+                    <span class="material-symbols-outlined text-lg">article</span>
+                    <span>МОИ ДОКУМЕНТЫ</span>
+                </button>
+            </div>
+
+            <!-- Категории -->
+            <div class="space-y-2">
+                <span class="text-xs font-label-caps text-gray-500 font-bold tracking-wider block uppercase">КАТЕГОРИИ</span>
+                <div class="space-y-1 pl-1">
+                    <button onclick="selectCategory('Эпидемиология')" class="category-btn w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2 transition-all">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                        <span>Эпидемиология</span>
+                    </button>
+                    <button onclick="selectCategory('Методические материалы')" class="category-btn w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2 transition-all">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                        <span>Методические материалы</span>
+                    </button>
+                    <button onclick="selectCategory('Отчёты')" class="category-btn w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-2 transition-all">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                        <span>Отчёты</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Теги -->
+            <div class="space-y-2">
+                <span class="text-xs font-label-caps text-gray-500 font-bold tracking-wider block uppercase">ТЕГИ</span>
+                <div class="flex flex-wrap gap-2 pl-1">
+                    <button onclick="selectTag('КОВИД-19')" class="tag-btn h-8 px-3 rounded-full bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 active:scale-95 transition-all">
+                        #КОВИД-19
+                    </button>
+                    <button onclick="selectTag('Вакцинация')" class="tag-btn h-8 px-3 rounded-full bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 active:scale-95 transition-all">
+                        #Вакцинация
+                    </button>
+                    <button onclick="selectTag('ПЦР')" class="tag-btn h-8 px-3 rounded-full bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 active:scale-95 transition-all">
+                        #ПЦР
+                    </button>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- ГРУППА 3: Основная таблица документов (Document Grid/List Panel) -->
+        <main class="lg:col-span-3 bg-white rounded-xl p-6 border border-gray-200 space-y-6 shadow-sm">
+
+            <!-- Заголовок и Сортировка -->
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <h2 class="font-headline-md text-xl font-bold text-gray-800">
+                    СПИСОК ДОКУМЕНТОВ
+                </h2>
+
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label for="sort-select" class="text-xs font-bold text-gray-500 tracking-wider font-label-caps uppercase">СОРТИРОВАТЬ ПО</label>
+                        <select id="sort-select" class="bg-gray-50 border border-gray-200 text-xs rounded-lg h-9 px-3 pr-8 focus:outline-none focus:ring-2 focus:ring-[#1A365D] cursor-pointer hover:bg-gray-100 transition-all">
+                            <option value="date-desc">По Дате Изменения</option>
+                            <option value="name-asc">По Названию</option>
+                            <option value="status">По Статусу</option>
+                        </select>
+                    </div>
+
+                    <!-- Переключение вида -->
+                    <div class="flex border border-gray-200 rounded-lg overflow-hidden h-9">
+                        <button class="px-3 bg-[#1A365D] text-white flex items-center justify-center transition-all" aria-label="Режим таблицы">
+                            <span class="material-symbols-outlined text-lg">format_list_bulleted</span>
+                        </button>
+                        <button class="px-3 bg-gray-50 hover:bg-gray-100 text-gray-500 flex items-center justify-center transition-all" aria-label="Режим плитки">
+                            <span class="material-symbols-outlined text-lg">grid_view</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Таблица -->
+            <div class="overflow-x-auto border border-gray-100 rounded-lg">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200">
+                            <th class="px-4 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider">Название</th>
+                            <th class="px-4 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider">Версия</th>
+                            <th class="px-4 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider">Автор</th>
+                            <th class="px-4 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider whitespace-nowrap">Дата Изменения</th>
+                            <th class="px-4 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider">Статус</th>
+                            <th class="px-4 py-3 font-semibold text-gray-600 uppercase text-xs tracking-wider text-right">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="document-table-body" class="divide-y divide-gray-100">
+
+                        <!-- Документ 1 -->
+                        <tr class="hover:bg-gray-50/50 transition-all cursor-pointer" data-category="Эпидемиология" data-tag="ПЦР" data-name="Протокол ПЦР-диагностики САРС-КоВ-2">
+                            <td class="px-4 py-4 font-semibold text-[#1A365D]">
+                                Протокол ПЦР-диагностики САРС-КоВ-2
+                            </td>
+                            <td class="px-4 py-4 font-data-mono text-xs text-gray-500">
+                                в1.2
+                            </td>
+                            <td class="px-4 py-4 text-gray-600">
+                                Иванов И.И.
+                            </td>
+                            <td class="px-4 py-4 text-gray-500 font-data-mono text-xs whitespace-nowrap">
+                                2026-07-28
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                                    Черновик
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-right whitespace-nowrap">
+                                <div class="inline-flex gap-2">
+                                    <button class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary transition-colors" title="Редактировать">
+                                        <span class="material-symbols-outlined text-base">edit</span>
+                                    </button>
+                                    <button class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary transition-colors" title="Открыть документ">
+                                        <span class="material-symbols-outlined text-base">description</span>
+                                    </button>
+                                    <button class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-red-600 transition-colors" title="Удалить">
+                                        <span class="material-symbols-outlined text-base">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Документ 2 -->
+                        <tr class="hover:bg-gray-50/50 transition-all cursor-pointer" data-category="Методические материалы" data-tag="Вакцинация" data-name="Инструкция по вакцинации">
+                            <td class="px-4 py-4 font-semibold text-[#1A365D]">
+                                Инструкция по вакцинации
+                            </td>
+                            <td class="px-4 py-4 font-data-mono text-xs text-[#1A365D] font-bold">
+                                в2.0 (Активная)
+                            </td>
+                            <td class="px-4 py-4 text-gray-600">
+                                Петрова А.П.
+                            </td>
+                            <td class="px-4 py-4 text-gray-500 font-data-mono text-xs whitespace-nowrap">
+                                2026-06-15
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                                    Утверждено
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-right whitespace-nowrap">
+                                <div class="inline-flex gap-2">
+                                    <button class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary transition-colors" title="Просмотр">
+                                        <span class="material-symbols-outlined text-base">visibility</span>
+                                    </button>
+                                    <button class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary transition-colors" title="История изменений">
+                                        <span class="material-symbols-outlined text-base">history</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Документ 3 -->
+                        <tr class="hover:bg-gray-50/50 transition-all cursor-pointer" data-category="Отчёты" data-tag="КОВИД-19" data-name="Годовой отчет за 2025 год">
+                            <td class="px-4 py-4 font-semibold text-[#1A365D]">
+                                Годовой отчет за 2025 год
+                            </td>
+                            <td class="px-4 py-4 font-data-mono text-xs text-gray-500">
+                                в1.0
+                            </td>
+                            <td class="px-4 py-4 text-gray-600">
+                                Сидоров В.В.
+                            </td>
+                            <td class="px-4 py-4 text-gray-500 font-data-mono text-xs whitespace-nowrap">
+                                2026-01-10
+                            </td>
+                            <td class="px-4 py-4">
+                                <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                    Архив
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-right whitespace-nowrap">
+                                <div class="inline-flex gap-2">
+                                    <button class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary transition-colors" title="Просмотр">
+                                        <span class="material-symbols-outlined text-base">visibility</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Постраничный переход и Информационный блок -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-100 text-sm">
+                <div class="text-gray-500" id="total-count-label">
+                    Показано 3 из 3 документов
+                </div>
+
+                <nav class="inline-flex rounded-lg border border-gray-200 overflow-hidden text-xs font-bold font-label-caps" aria-label="Пагинация">
+                    <button class="px-3.5 py-2 bg-white text-[#1A365D] border-r border-gray-200 hover:bg-gray-50">1</button>
+                    <button class="px-3.5 py-2 bg-white text-gray-500 border-r border-gray-200 hover:bg-gray-50">2</button>
+                    <button class="px-3.5 py-2 bg-white text-gray-500 border-r border-gray-200 hover:bg-gray-50">3</button>
+                    <button class="px-4 py-2 bg-white text-gray-700 hover:bg-gray-50">Следующая</button>
+                </nav>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ГРУППА 4: Подвал (Footer) -->
+    <footer class="w-full bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-400 font-medium">
+        ТЕСТ-ФОРТИ-ФЁРСТ [Макет Лексикон Флакс в0.1]
+    </footer>
+
+    <!-- ГРУППА 5: Модальное окно создания документа (Интерактивный микро-интерфейс) -->
+    <div id="modal-new-doc" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 class="font-headline-md text-lg font-bold text-gray-800">СОЗДАТЬ НОВЫЙ ДОКУМЕНТ</h3>
+                <button id="modal-close-btn" class="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form id="new-document-form" class="space-y-4" onsubmit="event.preventDefault(); submitNewDocument();">
+                <div class="space-y-1">
+                    <label for="doc-title" class="text-xs font-bold text-gray-600 block">НАЗВАНИЕ ДОКУМЕНТА</label>
+                    <input id="doc-title" required type="text" placeholder="Введите название документа..." class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A365D]"/>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label for="doc-author" class="text-xs font-bold text-gray-600 block">АВТОР</label>
+                        <input id="doc-author" required type="text" value="Иванов И.И." class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A365D]"/>
+                    </div>
+                    <div class="space-y-1">
+                        <label for="doc-category" class="text-xs font-bold text-gray-600 block">КАТЕГОРИЯ</label>
+                        <select id="doc-category" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A365D]">
+                            <option value="Эпидемиология">Эпидемиология</option>
+                            <option value="Методические материалы">Методические материалы</option>
+                            <option value="Отчёты">Отчёты</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label for="doc-tag" class="text-xs font-bold text-gray-600 block">ТЕГ</label>
+                    <select id="doc-tag" class="w-full bg-gray-50 border border-gray-200 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A365D]">
+                        <option value="ПЦР">ПЦР</option>
+                        <option value="Вакцинация">Вакцинация</option>
+                        <option value="КОВИД-19">КОВИД-19</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-3 border-t border-gray-100">
+                    <button type="button" id="modal-cancel-btn" class="px-4 h-11 border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold active:scale-95 transition-all">
+                        Отмена
+                    </button>
+                    <button type="submit" class="px-5 h-11 bg-[#1A365D] hover:bg-primary-hover text-white rounded-lg text-sm font-bold active:scale-95 transition-all shadow-md">
+                        Создать
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JS для реализации интерактивности (Action-Perception Loop) -->
+    <script>
+        let selectedCategory = '';
+        let selectedTag = '';
+        let searchQuery = '';
+
+        const searchInput = document.getElementById('search-input');
+        const tableBody = document.getElementById('document-table-body');
+        const totalCountLabel = document.getElementById('total-count-label');
+
+        // Открытие/закрытие модального окна
+        const btnNewDoc = document.getElementById('btn-new-document');
+        const modalNewDoc = document.getElementById('modal-new-doc');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+
+        btnNewDoc.addEventListener('click', () => {
+            modalNewDoc.classList.remove('hidden');
+            document.getElementById('doc-title').focus();
+        });
+
+        const closeModal = () => {
+            modalNewDoc.classList.add('hidden');
+            document.getElementById('new-document-form').reset();
+        };
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        modalCancelBtn.addEventListener('click', closeModal);
+
+        // Добавление нового документа
+        function submitNewDocument() {
+            const title = document.getElementById('doc-title').value;
+            const author = document.getElementById('doc-author').value;
+            const category = document.getElementById('doc-category').value;
+            const tag = document.getElementById('doc-tag').value;
+            const today = new Date().toISOString().split('T')[0];
+
+            const newRow = document.createElement('tr');
+            newRow.className = "hover:bg-gray-50/50 transition-all cursor-pointer";
+            newRow.setAttribute('data-category', category);
+            newRow.setAttribute('data-tag', tag);
+            newRow.setAttribute('data-name', title);
+
+            newRow.innerHTML = `
+                <td class="px-4 py-4 font-semibold text-[#1A365D]">${title}</td>
+                <td class="px-4 py-4 font-data-mono text-xs text-gray-500">в1.0</td>
+                <td class="px-4 py-4 text-gray-600">${author}</td>
+                <td class="px-4 py-4 text-gray-500 font-data-mono text-xs whitespace-nowrap">${today}</td>
+                <td class="px-4 py-4">
+                    <span class="inline-flex px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                        Черновик
+                    </span>
+                </td>
+                <td class="px-4 py-4 text-right whitespace-nowrap">
+                    <div class="inline-flex gap-2">
+                        <button class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary transition-colors" title="Редактировать">
+                            <span class="material-symbols-outlined text-base">edit</span>
+                        </button>
+                        <button class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary transition-colors" title="Открыть документ">
+                            <span class="material-symbols-outlined text-base">description</span>
+                        </button>
+                        <button class="h-9 w-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-red-600 transition-colors" title="Удалить">
+                            <span class="material-symbols-outlined text-base">delete</span>
+                        </button>
+                    </div>
+                </td>
+            `;
+
+            // Навесить обработчик удаления для новой кнопки удаления
+            const deleteBtn = newRow.querySelector('button[title="Удалить"]');
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                newRow.remove();
+                filterAndRender();
+            });
+
+            tableBody.insertBefore(newRow, tableBody.firstChild);
+            closeModal();
+            filterAndRender();
+        }
+
+        // Удаление для изначальных строк
+        document.querySelectorAll('button[title="Удалить"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                btn.closest('tr').remove();
+                filterAndRender();
+            });
+        });
+
+        // Функция фильтрации
+        function filterAndRender() {
+            const rows = tableBody.querySelectorAll('tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const category = row.getAttribute('data-category');
+                const tag = row.getAttribute('data-tag');
+                const name = row.getAttribute('data-name').toLowerCase();
+
+                const matchesCategory = !selectedCategory || category === selectedCategory;
+                const matchesTag = !selectedTag || tag === selectedTag;
+                const matchesSearch = !searchQuery || name.includes(searchQuery);
+
+                if (matchesCategory && matchesTag && matchesSearch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            totalCountLabel.textContent = `Показано ${visibleCount} из ${rows.length} документов`;
+        }
+
+        // Фильтрация по поиску
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase().trim();
+            filterAndRender();
+        });
+
+        // Клик по категориям
+        function selectCategory(categoryName) {
+            const btns = document.querySelectorAll('.category-btn');
+            if (selectedCategory === categoryName) {
+                // Сброс фильтра
+                selectedCategory = '';
+                btns.forEach(btn => btn.classList.remove('bg-gray-100', 'font-semibold', 'text-[#1A365D]'));
+            } else {
+                selectedCategory = categoryName;
+                btns.forEach(btn => {
+                    const spanText = btn.querySelector('span:not(.w-1\\.5)').textContent;
+                    if (spanText === categoryName) {
+                        btn.classList.add('bg-gray-100', 'font-semibold', 'text-[#1A365D]');
+                    } else {
+                        btn.classList.remove('bg-gray-100', 'font-semibold', 'text-[#1A365D]');
+                    }
+                });
+            }
+            filterAndRender();
+        }
+
+        // Клик по тегам
+        function selectTag(tagName) {
+            const btns = document.querySelectorAll('.tag-btn');
+            if (selectedTag === tagName) {
+                // Сброс фильтра
+                selectedTag = '';
+                btns.forEach(btn => {
+                    btn.classList.remove('bg-[#1A365D]', 'text-white');
+                    btn.classList.add('bg-gray-100', 'text-gray-700');
+                });
+            } else {
+                selectedTag = tagName;
+                btns.forEach(btn => {
+                    const cleanText = btn.textContent.replace('#', '').trim();
+                    if (cleanText === tagName) {
+                        btn.classList.remove('bg-gray-100', 'text-gray-700');
+                        btn.classList.add('bg-[#1A365D]', 'text-white');
+                    } else {
+                        btn.classList.remove('bg-[#1A365D]', 'text-white');
+                        btn.classList.add('bg-gray-100', 'text-gray-700');
+                    }
+                });
+            }
+            filterAndRender();
+        }
+
+        // ВСЕ ДОКУМЕНТЫ кнопка
+        document.getElementById('filter-all').addEventListener('click', () => {
+            selectedCategory = '';
+            selectedTag = '';
+            searchQuery = '';
+            searchInput.value = '';
+
+            // Сбросить стили кнопок
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('bg-gray-100', 'font-semibold', 'text-[#1A365D]'));
+            document.querySelectorAll('.tag-btn').forEach(btn => {
+                btn.classList.remove('bg-[#1A365D]', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+            });
+
+            document.getElementById('filter-all').classList.add('bg-gray-100', 'text-[#1A365D]');
+            document.getElementById('filter-my').classList.remove('bg-gray-100', 'text-[#1A365D]');
+            document.getElementById('filter-my').classList.add('text-gray-600');
+
+            filterAndRender();
+        });
+
+        // МОИ ДОКУМЕНТЫ кнопка (демо фильтрации)
+        document.getElementById('filter-my').addEventListener('click', () => {
+            document.getElementById('filter-my').classList.add('bg-gray-100', 'text-[#1A365D]');
+            document.getElementById('filter-all').classList.remove('bg-gray-100', 'text-[#1A365D]');
+            document.getElementById('filter-all').classList.add('text-gray-600');
+
+            // Фильтруем на документы автора "Иванов И.И."
+            const rows = tableBody.querySelectorAll('tr');
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const authorCell = row.querySelectorAll('td')[2];
+                if (authorCell && authorCell.textContent.trim() === 'Иванов И.И.') {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            totalCountLabel.textContent = `Показано ${visibleCount} из ${rows.length} документов`;
+        });
+    </script>
+</body>
+</html>
