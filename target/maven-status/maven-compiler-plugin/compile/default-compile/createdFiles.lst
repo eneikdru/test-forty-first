@@ -1,0 +1,8 @@
+com/eneik/generated/repository/DocumentVersionRepository.class
+com/eneik/generated/model/DocumentVersion.class
+com/eneik/generated/Application.class
+com/eneik/generated/model/Document.class
+com/eneik/generated/repository/DocumentRepository.class
+com/eneik/generated/repository/RoleRepository.class
+com/eneik/generated/model/Role.class
+com/eneik/generated/service/DocumentService.class
