@@ -14,10 +14,14 @@ public class DocumentService {
 
     private final DocumentRepository documentRepository;
     private final DocumentVersionRepository documentVersionRepository;
+    private final NotificationService notificationService;
 
-    public DocumentService(DocumentRepository documentRepository, DocumentVersionRepository documentVersionRepository) {
+    public DocumentService(DocumentRepository documentRepository,
+                           DocumentVersionRepository documentVersionRepository,
+                           NotificationService notificationService) {
         this.documentRepository = documentRepository;
         this.documentVersionRepository = documentVersionRepository;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -69,7 +73,10 @@ public class DocumentService {
 
         // Save new version as the only active one
         DocumentVersion newVersion = new DocumentVersion(document, nextVersionNumber, document.getFilePath(), document.getMetadata(), false);
-        documentVersionRepository.save(newVersion);
+        newVersion = documentVersionRepository.save(newVersion);
+
+        // Dispatch Telegram/Max notification
+        notificationService.dispatchDocumentUpdateNotification(document, newVersion);
 
         return document;
     }
