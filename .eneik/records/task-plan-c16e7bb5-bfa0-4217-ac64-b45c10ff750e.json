@@ -1,0 +1,48 @@
+{
+  "epics": [
+    {
+      "existingEpicId": null,
+      "title": "Fix Deliverable Readiness Stagnation Bug",
+      "jtbd": "When the project observer calculates deliverable readiness, I want the metric to accurately reflect resolved items, so that the stagnation warning is resolved and true progress is tracked.",
+      "kanoClass": "Must-Be",
+      "cynefinDomain": "complicated",
+      "sixSigmaMetric": "Reduce deliverable readiness calculation errors from 1 to 0",
+      "tocConstraintRef": "Deliverable tracking metric accuracy",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Identify and patch the bug in the existing codebase that causes the deliverable readiness ratio to stagnate at ~67% when items are resolved."
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch deliverable readiness tracking logic",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the fix for this epic, I want to patch the calculation logic, so that the metric correctly updates when items are resolved.",
+          "acceptanceCriteria": "Given the deliverable readiness ratio is 67%,\nWhen new items are resolved in the cycle,\nThen the ratio calculates correctly based on the new resolved items.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Tracking metric resolution logic",
+          "sixSigmaMetric": "Reduce calculation logic bugs from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "Verify deliverable readiness metric resolution",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing QA for this epic, I want to verify the readiness calculation across the test pyramid, so that future stagnation regressions are prevented.",
+          "acceptanceCriteria": "Given the tracking patch is deployed,\nWhen tests simulate a deliverable resolution,\nThen the reported readiness metric correctly increases above 67%.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Test coverage for metric updates",
+          "sixSigmaMetric": "Increase test coverage for metric updates from 0 to 1",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
