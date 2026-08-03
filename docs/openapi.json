@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Centralized Knowledge Base API",
-    "description": "API contract for the centralized knowledge base of the Education Center of \nFBUN Central Research Institute of Epidemiology of Rospotrebnadzor.\nDesigned to support parallel backend and frontend development for residency, postgraduate, \nand additional professional education courses.\n",
+    "description": "API contract for the centralized knowledge base of the Education Center of\nFBUN Central Research Institute of Epidemiology of Rospotrebnadzor.\nDesigned to support parallel backend and frontend development for residency, postgraduate,\nand additional professional education courses.\n",
     "version": "1.0.0"
   },
   "servers": [
