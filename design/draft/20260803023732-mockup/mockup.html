@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QA-X Control - Test Execution</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#2c3a4c",
+                    "on-surface-variant": "#c2c6d8",
+                    "on-error-container": "#ffdad6",
+                    "background": "#051424",
+                    "on-tertiary-fixed-variant": "#004c69",
+                    "on-tertiary-fixed": "#001e2c",
+                    "on-primary": "#002b75",
+                    "on-secondary-container": "#adb4ce",
+                    "surface-container-lowest": "#010f1f",
+                    "on-tertiary": "#00354a",
+                    "inverse-on-surface": "#233143",
+                    "primary": "#b3c5ff",
+                    "outline-variant": "#424656",
+                    "tertiary-fixed-dim": "#7bd0ff",
+                    "primary-fixed": "#dae1ff",
+                    "error-container": "#93000a",
+                    "on-surface": "#d4e4fa",
+                    "outline": "#8c90a1",
+                    "on-secondary-fixed": "#131b2e",
+                    "surface-dim": "#051424",
+                    "on-secondary": "#283044",
+                    "surface-container-low": "#0d1c2d",
+                    "primary-fixed-dim": "#b3c5ff",
+                    "surface-tint": "#b3c5ff",
+                    "inverse-primary": "#0054d6",
+                    "surface-container": "#122131",
+                    "on-primary-container": "#f8f7ff",
+                    "inverse-surface": "#d4e4fa",
+                    "primary-container": "#0066ff",
+                    "surface-container-high": "#1c2b3c",
+                    "surface-container-highest": "#273647",
+                    "secondary-fixed-dim": "#bec6e0",
+                    "on-error": "#690005",
+                    "on-secondary-fixed-variant": "#3f465c",
+                    "on-primary-fixed": "#001849",
+                    "on-tertiary-container": "#f1f8ff",
+                    "on-primary-fixed-variant": "#003fa4",
+                    "secondary": "#bec6e0",
+                    "secondary-container": "#3f465c",
+                    "secondary-fixed": "#dae2fd",
+                    "surface-variant": "#273647",
+                    "tertiary": "#7bd0ff",
+                    "tertiary-container": "#007aa5",
+                    "surface": "#051424",
+                    "error": "#ffb4ab",
+                    "on-background": "#d4e4fa",
+                    "tertiary-fixed": "#c4e7ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "gutter": "16px",
+                    "margin-desktop": "32px",
+                    "base": "4px",
+                    "xl": "40px",
+                    "lg": "24px",
+                    "margin-mobile": "16px",
+                    "xs": "4px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "title-sm": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "code-md": ["JetBrains Mono"],
+                    "label-caps": ["Inter"],
+                    "code-sm": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "code-md": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "code-sm": ["11px", {"lineHeight": "16px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .progress-pulse {
+            animation: pulse-width 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-width {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .glow-line {
+            box-shadow: 0 0 10px rgba(179, 197, 255, 0.3);
+        }
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline-variant z-40 flex justify-between items-center px-lg py-sm">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary" data-icon="terminal">terminal</span>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">QA-X Control</h1>
+</div>
+<div class="text-on-surface-variant font-label-caps text-[10px]">Build: v2.4.1-prod</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto px-margin-mobile pt-lg pb-32 space-y-lg">
+<!-- Execution Header Card -->
+<section class="bg-surface-container rounded-xl p-md border border-outline-variant relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2">
+<span class="inline-flex items-center gap-xs px-sm py-xs bg-primary-container text-on-primary-container rounded-full text-[10px] font-bold uppercase tracking-widest animate-pulse">
+<span class="w-1.5 h-1.5 rounded-full bg-on-primary-container"></span>
+                    RUNNING
+                </span>
+</div>
+<div class="space-y-sm">
+<h2 class="font-title-sm text-title-sm text-on-surface pr-16">Verify Moodle Financial Document Visibility</h2>
+<div class="flex items-center justify-between text-on-surface-variant font-body-sm">
+<span>Task ID: #8842-AF</span>
+<span>Progress: 75%</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-3/4 rounded-full glow-line transition-all duration-500"></div>
+</div>
+</div>
+</section>
+<!-- Test Steps Sequence -->
+<section class="space-y-md">
+<h3 class="font-label-caps text-label-caps text-outline uppercase">Execution Steps</h3>
+<div class="relative pl-6 space-y-lg">
+<!-- Timeline Thread Line -->
+<div class="absolute left-1.5 top-2 bottom-2 w-[1px] bg-outline-variant"></div>
+<!-- Step 1 -->
+<div class="relative flex items-start gap-md">
+<div class="absolute -left-[22px] mt-1 bg-background">
+<span class="material-symbols-outlined text-tertiary-container text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="bg-surface-container-low p-sm rounded-lg border border-outline-variant flex-1 flex justify-between items-center">
+<div>
+<p class="font-body-md text-on-surface">Login as 'Financial Auditor'</p>
+<p class="font-code-sm text-on-surface-variant text-[10px]">Auth Context: auditor_primary</p>
+</div>
+<span class="font-label-caps text-tertiary text-[10px]">2.1s</span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="relative flex items-start gap-md">
+<div class="absolute -left-[22px] mt-1 bg-background">
+<span class="material-symbols-outlined text-tertiary-container text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="bg-surface-container-low p-sm rounded-lg border border-outline-variant flex-1 flex justify-between items-center">
+<div>
+<p class="font-body-md text-on-surface">Navigate to 'Course: Fin-101'</p>
+<p class="font-code-sm text-on-surface-variant text-[10px]">URL: /course/view.php?id=101</p>
+</div>
+<span class="font-label-caps text-tertiary text-[10px]">1.4s</span>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="relative flex items-start gap-md">
+<div class="absolute -left-[22px] mt-1 bg-background">
+<span class="material-symbols-outlined text-tertiary-container text-lg" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="bg-surface-container-low p-sm rounded-lg border border-outline-variant flex-1 flex justify-between items-center">
+<div>
+<p class="font-body-md text-on-surface">Verify 'Invoice_2023.pdf' is visible</p>
+<p class="font-code-sm text-on-surface-variant text-[10px]">DOM Element: #file-8892</p>
+</div>
+<span class="font-label-caps text-tertiary text-[10px]">0.8s</span>
+</div>
+</div>
+<!-- Step 4 (In Progress) -->
+<div class="relative flex items-start gap-md">
+<div class="absolute -left-[22px] mt-1 bg-background">
+<div class="w-4 h-4 rounded-full border-2 border-primary-container border-t-transparent animate-spin ml-0.5 mt-0.5"></div>
+</div>
+<div class="bg-surface-container-high p-sm rounded-lg border border-primary flex-1">
+<p class="font-body-md text-primary">Verify 'Confidential_Salary_Report.pdf' is hidden</p>
+<div class="mt-2 flex items-center gap-xs">
+<span class="material-symbols-outlined text-sm text-on-surface-variant" data-icon="search">search</span>
+<span class="font-code-sm text-on-surface-variant animate-pulse">Scanning DOM for forbidden keywords...</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Console Output Section -->
+<section class="space-y-sm">
+<div class="flex items-center justify-between">
+<h3 class="font-label-caps text-label-caps text-outline uppercase">Console Output</h3>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-on-surface" data-icon="open_in_full">open_in_full</span>
+</div>
+<div class="bg-black rounded-lg border border-outline-variant overflow-hidden">
+<div class="bg-surface-container-highest px-md py-xs border-b border-outline-variant flex items-center gap-sm">
+<div class="flex gap-1">
+<div class="w-2 h-2 rounded-full bg-error"></div>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+</div>
+<span class="font-code-sm text-on-surface-variant">bash — 80x24</span>
+</div>
+<div class="p-md font-code-sm text-on-surface-variant h-48 overflow-y-auto space-y-1">
+<p class="text-tertiary">[14:02:11] INFO: Initializing Chrome headless instance...</p>
+<p class="text-tertiary">[14:02:13] INFO: Browser context established.</p>
+<p class="text-tertiary">[14:02:14] INFO: Navigating to moodle.internal/login</p>
+<p class="text-on-surface">[14:02:16] SUCCESS: Authenticated as financial_auditor_01</p>
+<p class="text-on-surface">[14:02:18] SUCCESS: Navigation to /course/101 complete.</p>
+<p class="text-on-surface">[14:02:19] SUCCESS: Found 'Invoice_2023.pdf' with state: VISIBLE</p>
+<p class="text-primary-container brightness-150">[14:02:20] RUNNING: Starting negative assertion for 'Confidential_Salary_Report.pdf'</p>
+<p class="text-on-surface-variant animate-pulse opacity-70">_</p>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface-container dark:bg-surface-container border-t border-outline-variant dark:border-outline-variant">
+<!-- Tests Tab (Active) -->
+<a class="flex flex-col items-center justify-center bg-secondary-container dark:bg-secondary-container text-on-secondary-container dark:text-on-secondary-container rounded-full px-4 py-1 transition-all duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="checklist" style="font-variation-settings: 'FILL' 1;">checklist</span>
+<span class="font-label-caps text-label-caps">Tests</span>
+</a>
+<!-- Logs Tab -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant p-2 hover:text-on-surface dark:hover:text-on-surface transition-all duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span class="font-label-caps text-label-caps">Logs</span>
+</a>
+<!-- Reports Tab -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant p-2 hover:text-on-surface dark:hover:text-on-surface transition-all duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-caps text-label-caps">Reports</span>
+</a>
+</nav>
+<script>
+        // Micro-interaction for the progress bar
+        document.addEventListener('DOMContentLoaded', () => {
+            const progress = document.querySelector('.glow-line');
+            let width = 75;
+            setInterval(() => {
+                if (width < 95) {
+                    width += 0.1;
+                    progress.style.width = width + '%';
+                }
+            }, 500);
+        });
+    </script>
+</body></html>
