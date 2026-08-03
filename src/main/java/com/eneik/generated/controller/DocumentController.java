@@ -309,6 +309,10 @@ public class DocumentController {
             return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "File is empty"));
         }
 
+        if (name == null || name.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Document name is required"));
+        }
+
         String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "ivan.ivanov@epidem.ru";
         String userId = "ca078170-df17-48f8-bca4-d89000a6e87f";
 
