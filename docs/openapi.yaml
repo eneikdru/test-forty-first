@@ -1,0 +1,641 @@
+openapi: 3.0.3
+info:
+  title: Educational Center Knowledge Base API
+  description: Shared API contract between frontend and backend for educational center knowledge base (residents, graduate students, and continuous professional education).
+  version: 1.0.0
+paths:
+  /api/v1/auth/login:
+    post:
+      summary: Traditional Auth Login
+      description: Authenticates a user with a username/email and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: ivan_doctor
+                password:
+                  type: string
+                  format: password
+                  example: securepassword123
+      responses:
+        '200':
+          description: Successful authentication. Returns JWT or sets session cookie.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized due to bad credentials.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/login/eios:
+    get:
+      summary: Initiate EIOS SSO Authorization
+      description: Initiates the OAuth 2.0 PKCE flow by redirecting the client to the EIOS authorization server.
+      parameters:
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+          description: State parameter for CSRF prevention.
+      responses:
+        '302':
+          description: Redirect to EIOS Login/Authorization Endpoint.
+
+  /api/v1/auth/callback:
+    get:
+      summary: EIOS SSO Authorization Callback
+      description: Handles the redirect containing authorization code and state from EIOS auth server.
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Authorization code returned by EIOS.
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+          description: State parameter returned by EIOS for verification.
+      responses:
+        '200':
+          description: Successful OAuth2 authentication. User session established.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid request, code, or state parameter mismatch.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/me:
+    get:
+      summary: Get Current User Session
+      description: Returns information about the currently logged-in user, including roles and privileges.
+      responses:
+        '200':
+          description: Success. Info returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/logout:
+    post:
+      summary: Logout Current Session
+      description: Log out the active user session and invalidate the session token.
+      responses:
+        '204':
+          description: Logged out successfully.
+
+  /api/v1/documents:
+    get:
+      summary: List and Search Documents
+      description: |
+        Performs full-text search and filtering on documents in the knowledge base.
+        Accessible by all roles (Admin, Content Manager, Teacher, Student).
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search query term (full-text search). Supports synonyms/abbreviations.
+        - name: specialty
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by educational specialty (e.g., epidemiology, infectious diseases).
+        - name: level
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by education level (e.g., residency, postgraduate, DPO).
+        - name: tag
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by tag (e.g., working_programs, templates).
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+          description: Page number.
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+          description: Number of elements per page.
+      responses:
+        '200':
+          description: Success. Returns paginated list of documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+                  totalElements:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  pageNumber:
+                    type: integer
+    post:
+      summary: Upload and Create a New Document
+      description: |
+        Creates a new document in the system and stores the initial version (V1).
+        Accessible by Admin and Content Manager.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - title
+                - file
+              properties:
+                title:
+                  type: string
+                  description: The title of the document.
+                file:
+                  type: string
+                  format: binary
+                  description: The physical document file (PDF, DOCX, XLSX, PPTX, JPG/PNG).
+                metadata:
+                  type: string
+                  description: Metadata JSON string (tags, categories, author info, etc.).
+      responses:
+        '201':
+          description: Document created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: Invalid input or file format not supported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden for unauthorized roles.
+
+  /api/v1/documents/{id}:
+    get:
+      summary: Get Document Details by ID
+      description: Returns full details of the document, including its active file path and metadata.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Document ID.
+      responses:
+        '200':
+          description: Document retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '404':
+          description: Document not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update Document (Triggers New Version)
+      description: |
+        Updates an existing document. This archives currently active version and increments version number, adding a new DocumentVersion.
+        Accessible by Admin, Content Manager, and Teacher/Supervisor.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Document ID to update.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: New title.
+                file:
+                  type: string
+                  format: binary
+                  description: New physical file.
+                metadata:
+                  type: string
+                  description: Updated metadata JSON string.
+      responses:
+        '200':
+          description: Document updated successfully with a new active version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: Bad request.
+        '404':
+          description: Document not found.
+        '403':
+          description: Forbidden.
+    delete:
+      summary: Delete Document
+      description: Deletes a document and all its versions. Restricted to Admin and Content Manager.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Document ID to delete.
+      responses:
+        '204':
+          description: Deleted successfully.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Not found.
+
+  /api/v1/documents/{id}/versions:
+    get:
+      summary: Get Document Version History
+      description: Lists all versions of the document, showing history, version numbers, archived status, and metadata.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Document ID.
+      responses:
+        '200':
+          description: Version list retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentVersion'
+        '404':
+          description: Document not found.
+
+  /api/v1/documents/{id}/comments:
+    get:
+      summary: Get Document Comments / Requests for Update
+      description: Retrieves user comments and requests for actualization associated with the document.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Document ID.
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+    post:
+      summary: Add Comment or Request for Update
+      description: Allows a user to post a comment or request for update on a document.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Document ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  example: "Пожалуйста, обновите ФГОС по специальности 'Педиатрия' до актуального релиза."
+                type:
+                  type: string
+                  enum: [COMMENT, UPDATE_REQUEST]
+                  default: COMMENT
+      responses:
+        '201':
+          description: Comment/request posted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+
+  /api/v1/documents/favorites:
+    get:
+      summary: Get Favorite Documents
+      description: Lists documents added to the logged-in user's favorites list.
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+
+  /api/v1/documents/{id}/favorite:
+    post:
+      summary: Toggle Favorite Status
+      description: Adds or removes a document from the user's favorites list.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Document ID.
+      responses:
+        '200':
+          description: Success. Favorite status changed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  favorite:
+                    type: boolean
+                    example: true
+
+  /api/v1/integration/messenger/webhook:
+    post:
+      summary: Messenger Webhook Endpoint
+      description: Receives incoming events/messages from messengers (e.g. Telegram/VK Bot) to query the knowledge base. Requires signature verification.
+      parameters:
+        - name: X-Messenger-Signature-256
+          in: header
+          required: true
+          schema:
+            type: string
+          description: HMAC-SHA256 signature calculated over request body using a shared secret.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayload'
+      responses:
+        '200':
+          description: Webhook received and verified successfully.
+
+components:
+  schemas:
+    Role:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: ROLE_CONTENT_MANAGER
+        description:
+          type: string
+          example: Can manage knowledge base articles, files, tags and categories.
+
+    User:
+      type: object
+      required:
+        - id
+        - username
+        - email
+        - roles
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        username:
+          type: string
+          example: ivan_doctor
+        email:
+          type: string
+          example: ivan@cniie.ru
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+
+    Document:
+      type: object
+      required:
+        - id
+        - title
+        - filePath
+        - metadata
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 42
+        title:
+          type: string
+          example: "ФГОС по специальности Эпидемиология"
+        filePath:
+          type: string
+          example: "/uploads/documents/fgos_epidemiology_2026.pdf"
+        metadata:
+          type: string
+          example: '{"specialty": "Эпидемиология", "level": "ординатура", "tags": ["ФГОС", "нормативные акты"]}'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-08-03T02:26:41Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2026-08-03T02:26:41Z"
+
+    DocumentVersion:
+      type: object
+      required:
+        - id
+        - versionNumber
+        - filePath
+        - metadata
+        - archived
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 101
+        versionNumber:
+          type: integer
+          example: 1
+        filePath:
+          type: string
+          example: "/uploads/documents/fgos_epidemiology_2026.pdf"
+        metadata:
+          type: string
+          example: '{"specialty": "Эпидемиология", "level": "ординатура", "tags": ["ФГОС", "нормативные акты"]}'
+        archived:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-08-03T02:26:41Z"
+
+    Comment:
+      type: object
+      required:
+        - id
+        - text
+        - type
+        - author
+        - createdAt
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1001
+        text:
+          type: string
+          example: "Пожалуйста, обновите ФГОС."
+        type:
+          type: string
+          enum: [COMMENT, UPDATE_REQUEST]
+        author:
+          type: string
+          example: "ivan_doctor"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-08-03T02:30:00Z"
+
+    WebhookPayload:
+      type: object
+      required:
+        - update_id
+        - message
+      properties:
+        update_id:
+          type: integer
+          example: 987654321
+        message:
+          type: object
+          required:
+            - message_id
+            - text
+          properties:
+            message_id:
+              type: integer
+              example: 12345
+            from:
+              type: object
+              properties:
+                id:
+                  type: integer
+                first_name:
+                  type: string
+                username:
+                  type: string
+            chat:
+              type: object
+              properties:
+                id:
+                  type: integer
+                type:
+                  type: string
+                title:
+                  type: string
+            date:
+              type: integer
+            text:
+              type: string
+              example: "/search ФГОС ординатура 2026"
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - message
+        - timestamp
+      properties:
+        status:
+          type: integer
+          example: 401
+        message:
+          type: string
+          example: "Unauthorized"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-08-03T02:26:41Z"
