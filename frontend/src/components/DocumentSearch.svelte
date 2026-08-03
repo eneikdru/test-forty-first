@@ -13,7 +13,8 @@
     { value: "Administrator", label: "Администратор" },
     { value: "Content-manager", label: "Контент-менеджер" },
     { value: "Teacher", label: "Преподаватель / научный руководитель" },
-    { value: "Student", label: "Ординатор / аспирант / слушатель" }
+    { value: "Student", label: "Ординатор / аспирант / слушатель" },
+    { value: "Economist", label: "Экономист" }
   ];
 
   // 2. Search & Filter State
@@ -39,6 +40,7 @@
   let editDescription = "";
   let editError = "";
   let editSuccess = "";
+  let accessDeniedForDocument = false;
 
   // 4. Persistence / Caching States (Loaded from LocalStorage)
   let documents = [];
@@ -129,6 +131,21 @@
       fileType: "application/pdf",
       updatedAt: "2026-06-20T11:00:00Z",
       updatedBy: "ivan.ivanov@epidem.ru"
+    },
+    {
+      id: "7a2fbb22-c35d-4f11-92b1-50e58f00032c",
+      name: "Бюджетный план на 2026 год",
+      description: "Финансовый план и бюджетные лимиты образовательного центра на 2026 год. Доступ только для экономистов и руководства.",
+      doc_type: "Budget",
+      specialty: "Other",
+      edu_level: "Additional Professional Education",
+      category_id: "edu_budget_finance",
+      tags: ["бюджет", "финансы", "планирование"],
+      version: 1,
+      fileSize: 450000,
+      fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      updatedAt: "2026-08-01T12:00:00Z",
+      updatedBy: "economist@epidem.ru"
     }
   ];
 
@@ -212,6 +229,8 @@
     user = loggedUser;
     localStorage.setItem("lexicon_user", JSON.stringify(loggedUser));
     loginError = "";
+    selectedDocument = null;
+    accessDeniedForDocument = false;
   }
 
   // Handle Logout
@@ -358,6 +377,16 @@
 
   // Open document details drawer
   function openDocumentDetails(doc) {
+    if (doc.doc_type === "Budget" && user && user.role === "Student") {
+      accessDeniedForDocument = true;
+      selectedDocument = doc;
+      editError = "Доступ ограничен. У вас нет прав доступа к финансовым документам.";
+      editSuccess = "";
+      isEditing = false;
+      return;
+    }
+
+    accessDeniedForDocument = false;
     selectedDocument = doc;
     actualizationReason = "";
     actualizationSuccess = false;
@@ -457,6 +486,7 @@
       case "Protocols": return "Протоколы";
       case "Curriculum": return "Учебные планы";
       case "Guidelines": return "Методические рекомендации";
+      case "Budget": return "Бюджетные файлы";
       default: return type;
     }
   }
@@ -673,6 +703,7 @@
                 <option value="Protocols">Протоколы</option>
                 <option value="Curriculum">Учебно-методические материалы</option>
                 <option value="Guidelines">Методические рекомендации</option>
+                <option value="Budget">Бюджетные файлы</option>
               </select>
             </div>
 
@@ -956,7 +987,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-              {#if user}
+              {#if user && !accessDeniedForDocument}
                 <button
                   on:click={handleEditClick}
                   class="text-[#1A365D] hover:text-opacity-80 transition-colors p-1 flex items-center gap-1 text-xs font-semibold bg-[#e0e0ff] rounded px-2 py-1 min-h-[44px]"
@@ -989,7 +1020,13 @@
             </div>
           {/if}
 
-          {#if isEditing}
+          {#if accessDeniedForDocument}
+            <div class="p-6 bg-red-950 bg-opacity-20 border border-red-800 text-red-200 rounded text-center space-y-4" id="budget-access-denied">
+              <span class="material-symbols-outlined text-5xl text-red-500">lock</span>
+              <p class="text-base font-semibold">Доступ ограничен</p>
+              <p class="text-sm">У вас нет прав доступа для просмотра или редактирования бюджетных файлов.</p>
+            </div>
+          {:else if isEditing}
             <div class="space-y-4 border border-outline-variant p-4 bg-[#051424] rounded">
               <h4 class="font-bold text-sm text-[#d4e4fa]">Редактирование материала</h4>
               <div>
@@ -1186,24 +1223,26 @@
         </div>
 
         <!-- Document Download Footer -->
-        <div class="border-t border-outline-variant pt-4 flex gap-3">
-          <a
-            href="/api/v1/documents/{selectedDocument.id}/export?format=pdf"
-            on:click|preventDefault={() => alert('Скачивание PDF начато (эмуляция)...')}
-            class="flex-1 py-3 bg-primary text-on-primary-fixed text-center font-bold text-xs rounded hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
-          >
-            <span class="material-symbols-outlined text-sm">download</span>
-            Скачать PDF
-          </a>
-          <a
-            href="/api/v1/documents/{selectedDocument.id}/export?format=docx"
-            on:click|preventDefault={() => alert('Скачивание DOCX начато (эмуляция)...')}
-            class="flex-1 py-3 bg-surface-variant hover:bg-surface-container-highest text-[#d4e4fa] text-center font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 min-h-[44px]"
-          >
-            <span class="material-symbols-outlined text-sm">description</span>
-            Скачать DOCX
-          </a>
-        </div>
+        {#if !accessDeniedForDocument}
+          <div class="border-t border-outline-variant pt-4 flex gap-3">
+            <a
+              href="/api/v1/documents/{selectedDocument.id}/export?format=pdf"
+              on:click|preventDefault={() => alert('Скачивание PDF начато (эмуляция)...')}
+              class="flex-1 py-3 bg-primary text-on-primary-fixed text-center font-bold text-xs rounded hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+            >
+              <span class="material-symbols-outlined text-sm">download</span>
+              Скачать PDF
+            </a>
+            <a
+              href="/api/v1/documents/{selectedDocument.id}/export?format=docx"
+              on:click|preventDefault={() => alert('Скачивание DOCX начато (эмуляция)...')}
+              class="flex-1 py-3 bg-surface-variant hover:bg-surface-container-highest text-[#d4e4fa] text-center font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+            >
+              <span class="material-symbols-outlined text-sm">description</span>
+              Скачать DOCX
+            </a>
+          </div>
+        {/if}
 
       </div>
     </div>
