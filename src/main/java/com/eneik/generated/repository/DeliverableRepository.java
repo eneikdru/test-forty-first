@@ -17,6 +17,6 @@ public interface DeliverableRepository extends JpaRepository<Deliverable, Long> 
 
     @Modifying
     @Transactional
-    @Query("UPDATE Deliverable d SET d.status = :newStatus WHERE d.id = :id AND d.status = :oldStatus")
-    int updateStatusAtomically(@Param("id") Long id, @Param("oldStatus") String oldStatus, @Param("newStatus") String newStatus);
+    @Query("UPDATE Deliverable d SET d.status = :newStatus, d.lastUpdated = :now WHERE d.id = :id AND d.status = :oldStatus")
+    int updateStatusAtomically(@Param("id") Long id, @Param("oldStatus") String oldStatus, @Param("newStatus") String newStatus, @Param("now") java.time.LocalDateTime now);
 }

@@ -21,6 +21,9 @@ public class DeliverableReadinessVerificationTest {
     @Mock
     private DeliverableRepository deliverableRepository;
 
+    @Mock
+    private TimeService timeService;
+
     @InjectMocks
     private DeliverableReadinessService deliverableReadinessService;
 
@@ -28,11 +31,17 @@ public class DeliverableReadinessVerificationTest {
 
     @Test
     public void testReadinessMetricIncreasesAbove67Percent() {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        when(timeService.getCurrentTime()).thenReturn(now);
+
         // Given the tracking patch is deployed,
         // (State before resolution: 2 terminal states out of 3 total = ~66.7%)
         Deliverable d1 = new Deliverable(cycleId, "done");
         Deliverable d2 = new Deliverable(cycleId, "confirmed");
         Deliverable d3 = new Deliverable(cycleId, "pending");
+        d1.setLastUpdated(now);
+        d2.setLastUpdated(now);
+        d3.setLastUpdated(now);
 
         List<Deliverable> initialDeliverables = Arrays.asList(d1, d2, d3);
         when(deliverableRepository.findByCycleId(cycleId)).thenReturn(initialDeliverables);

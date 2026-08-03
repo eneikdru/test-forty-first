@@ -15,11 +15,17 @@ public class Deliverable {
     @Column(nullable = false, length = 50)
     private String status;
 
+    @Column(name = "last_updated", nullable = false)
+    private java.time.LocalDateTime lastUpdated;
+
     public Deliverable() {}
 
     public Deliverable(String cycleId, String status) {
         this.cycleId = cycleId;
         this.status = status;
+        // In order to avoid non-deterministic behavior inside the entity's constructor,
+        // we'll remove the explicit time assignment here and ensure it's explicitly set
+        // wherever Deliverable is constructed (e.g. using TimeService in DeliverableReadinessService).
     }
 
     public Long getId() {
@@ -44,5 +50,13 @@ public class Deliverable {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public java.time.LocalDateTime getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(java.time.LocalDateTime lastUpdated) {
+        this.lastUpdated = lastUpdated;
     }
 }
