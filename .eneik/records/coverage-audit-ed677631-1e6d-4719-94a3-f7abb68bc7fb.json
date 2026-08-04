@@ -1,0 +1,25 @@
+{
+  "gaps": [
+    {
+      "title": "Missing PDF/DOCX export endpoint",
+      "roleTag": "BARCAN-TAG-09",
+      "jtbd": "When a user wants to download a document, I want them to be able to get it in PDF or DOCX format, so that they can use it offline or print it.",
+      "acceptanceCriteria": "Given a document exists in the system, When a user clicks 'Скачать PDF' or 'Скачать DOCX', Then the server returns the document file data.",
+      "reason": "The client brief explicitly requires 'выгрузка документов в PDF/DOCX' (export documents in PDF/DOCX format) in section 4 'Интеграции и экспорт'. The frontend UI includes download buttons targeting this endpoint, but no such endpoint exists in the backend DocumentController."
+    },
+    {
+      "title": "Missing document commenting and actualization request functionality",
+      "roleTag": "BARCAN-TAG-09",
+      "jtbd": "When a user finds a document that is outdated or wants to discuss it, I want them to be able to leave comments and send actualization requests, so that the knowledge base remains accurate and collaborative.",
+      "acceptanceCriteria": "Given a document exists, When a user submits a comment or actualization request, Then the backend saves the comment/request and notifies the responsible parties.",
+      "reason": "The client brief explicitly requires 'возможность комментирования и отправки запросов на актуализацию' (ability to comment and send requests for actualization) in section 4 'Работа с контентом'. The frontend has a UI for displaying and adding comments, and for submitting these requests, but there are no backend endpoints or models to handle them."
+    },
+    {
+      "title": "Missing non-Russian UI text fixes",
+      "roleTag": "BARCAN-TAG-09",
+      "jtbd": "When a user interacts with the UI, I want all text to be strictly in Russian, so that it complies with the epidemiological record system requirements.",
+      "acceptanceCriteria": "Given the frontend application, When any page is rendered, Then there are no non-Russian words in the UI text, placeholders, or labels.",
+      "reason": "The visual style and language addendum strictly states 'Весь пользовательский интерфейс (frontend) должен быть только на русском языке — без единого слова на других языках... Правило действует на все текущие и будущие экраны продукта, включая уже реализованные — их нужно проверить и исправить'. The current frontend code contains English strings in UI contexts, such as 'Офлайн-симуляция ON', 'active-фильтры', and 'official-запрос'."
+    }
+  ]
+}
