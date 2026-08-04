@@ -36,7 +36,7 @@ public class DeliverableObserverQaVerificationTest {
     }
 
     @Test
-    public void verifyStagnationWarningResolutionAndReadinessUpdate() {
+    public void verifyPerpetuallyQueuedTasksAreNotCountedAsResolved() {
         // Given a test environment with simulated perpetually queued tasks
         String cycleId = "perpetual-queue-cycle";
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
@@ -61,9 +61,9 @@ public class DeliverableObserverQaVerificationTest {
         // When the project observer metric is queried
         float readinessRatio = deliverableReadinessService.calculateReadinessRatio(cycleId);
 
-        // Then tests confirm the stagnation warning is correctly resolved and readiness is updated
-        // 3 out of 3 should be counted as resolved (100%), clearing stagnation
-        assertEquals(1.0f, readinessRatio, 0.001f, "Stagnation warning should be resolved by treating perpetually queued tasks as resolved.");
+        // Then tests confirm the stagnation warning is correctly NOT resolved just because of time elapsed
+        // 2 out of 3 should be counted as resolved (~67%)
+        assertEquals(0.666f, readinessRatio, 0.01f, "Stagnation warning should not be resolved by treating perpetually queued tasks as resolved.");
     }
 
     @Test

@@ -39,18 +39,8 @@ public class DeliverableReadinessService {
             return 0.0f;
         }
 
-        java.time.LocalDateTime cutoff = timeService.getCurrentTime().minusHours(4);
-
         long resolvedCount = cycleDeliverables.stream()
-                .filter(d -> {
-                    if (!"pending".equals(d.getStatus())) {
-                        return true;
-                    }
-                    if (d.getLastUpdated() != null && d.getLastUpdated().isBefore(cutoff)) {
-                        return true;
-                    }
-                    return false;
-                })
+                .filter(d -> !"pending".equals(d.getStatus()))
                 .count();
 
         return (float) resolvedCount / cycleDeliverables.size();

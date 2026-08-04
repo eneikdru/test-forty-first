@@ -32,7 +32,6 @@ public class DeliverableReadinessVerificationTest {
     @Test
     public void testReadinessMetricIncreasesAbove67Percent() {
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        when(timeService.getCurrentTime()).thenReturn(now);
 
         // Given the tracking patch is deployed,
         // (State before resolution: 2 terminal states out of 3 total = ~66.7%)
