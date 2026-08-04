@@ -1,0 +1,44 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "32901e1d-d8d3-4364-a840-03a32efc3324",
+      "sixSigmaMetric": "reduce false positive project stagnation warnings from 1 to 0",
+      "tocConstraintRef": "project observer stagnation evaluation bottleneck",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Patch the deliverable and feature readiness calculation logic to correctly count resolved items and clear the stagnation warning"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Fix deliverable readiness stagnation calculation",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the calculation fix for this epic, I want to accurately count resolved deliverables, so that the stagnation warning is correctly dismissed.",
+          "acceptanceCriteria": "Given a project state with newly resolved deliverables\nWhen the deliverable readiness metric is calculated\nThen the resolved items are accurately counted in the progress metric\nThen the false stagnation deadlock warning is cleared",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "readiness metric calculation precision",
+          "sixSigmaMetric": "reduce calculation errors of resolved deliverables from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "Verify deliverable readiness calculation fix",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing QA for this epic, I want to verify the readiness calculation across the test pyramid, so that the stagnation bug is proven resolved.",
+          "acceptanceCriteria": "Given the updated calculation logic for deliverable readiness\nWhen integration and E2E tests are executed for the project observer\nThen unit tests verify the correct counting of resolved items\nThen E2E tests verify the stagnation warning is not shown when progress exists",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "readiness metric test automation coverage",
+          "sixSigmaMetric": "reduce uncaught calculation regressions from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
