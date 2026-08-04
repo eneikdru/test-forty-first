@@ -79,7 +79,7 @@ public class DeliverableStagnationIntegrationTest {
     }
 
     @Test
-    public void testTaskStuckForOver4HoursIsCountedAsResolved() {
+    public void testTaskStuckForOver4HoursIsNotCountedAsResolved() {
         String cycleId = "stuck-cycle";
 
         java.time.LocalDateTime now = java.time.LocalDateTime.now();
@@ -98,9 +98,9 @@ public class DeliverableStagnationIntegrationTest {
         entityManager.flush();
         entityManager.clear();
 
-        // Calculate ratio. Even though d2 is "pending", it should be counted as resolved because it's stuck > 4 hours.
+        // Calculate ratio. Even though d2 is "pending" and stuck for >4h, it should NOT be counted as resolved.
         float ratio = deliverableReadinessService.calculateReadinessRatio(cycleId);
 
-        assertEquals(1.0f, ratio, 0.001f, "Task stuck for >4h should be considered resolved, returning 100% readiness");
+        assertEquals(0.5f, ratio, 0.001f, "Task stuck for >4h should not be considered resolved, returning 50% readiness");
     }
 }
