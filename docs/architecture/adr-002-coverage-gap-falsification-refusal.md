@@ -16,7 +16,7 @@ To protect the system from the unchecked generation of wasteful tasks, this reje
 Let `t` = the "Coverage gap falsification" wishlist item.
 
 The Critique Trigger (Attack Formula) is formally defined as:
-`Attack(t) ⇔ P (¬J(t) ∨ ¬L(t) ∨ ¬C(t) ∨ ¬S(t) ∨ ¬G(t))`
+$$Attack(t) \iff P (\neg J(t) \lor \neg L(t) \lor \neg C(t) \lor \neg S(t) \lor \neg G(t))$$
 
 This task `t` is blocked because it triggers multiple failure predicates in the Attack Formula:
 
