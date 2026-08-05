@@ -1,0 +1,53 @@
+{
+  "gaps": [
+    {
+      "title": "Missing PDF/DOCX Document Export Endpoints",
+      "roleTag": "BARCAN-TAG-09",
+      "jtbd": "When a researcher or educator wants to use a document offline or print it, I want them to be able to download/export the document in PDF or DOCX format, so that they can access critical guidelines and forms without an internet connection.",
+      "acceptanceCriteria": "Given a valid document exists in the database, When an authenticated user requests the export endpoint `/api/v1/documents/{id}/export?format=pdf` or `/api/v1/documents/{id}/export/pdf`, Then the server returns the document file streamed with the correct content disposition and content type for PDF format.",
+      "reason": "Literal brief requirement in Section 4 'Интеграции и экспорт': 'выгрузка документов в PDF/DOCX'. While defined in the OpenAPI contract and mapped in Svelte client links, no download or export endpoints are implemented in the Java backend controller."
+    },
+    {
+      "title": "Missing Knowledge Base Statistics and Reports Export Endpoint",
+      "roleTag": "BARCAN-TAG-09",
+      "jtbd": "When an Administrator wants to analyze the usage of the knowledge base, I want to retrieve/export compiled reports of popular search queries, document views, and download statistics, so that we can optimize educational materials and monitor compliance.",
+      "acceptanceCriteria": "Given recorded user analytics exist in the system, When an Administrator requests the statistics report endpoint `/api/v1/statistics`, Then the server returns a structured report summarizing popular query terms, document view counts, and download counts.",
+      "reason": "Literal brief requirement in Section 3 'Администратор: ... выгрузка отчётов' and Section 4 'Интеграции и экспорт: экспорт статистики использования базы знаний (популярные запросы, просмотры, скачивания)'. No stats retrieval endpoint or admin analytics export dashboard is implemented in the platform."
+    },
+    {
+      "title": "Missing Backup and Database Archive Utility",
+      "roleTag": "BARCAN-TAG-09",
+      "jtbd": "When the system faces a hardware failure or data corruption, I want to be able to create and download complete backups of the database, metadata, and physical files, so that we can restore the knowledge base and avoid data loss.",
+      "acceptanceCriteria": "Given an Administrator is authenticated, When they trigger a backup command or endpoint, Then the system compiles the SQL schema, seed data, and physical documents into a timestamped compressed archive and exports it securely.",
+      "reason": "Literal brief requirement in Section 3 'Администратор: ... резервное копирование' and Section 4 'Безопасность и доступ: резервное копирование'. No database backup mechanism or file system archival endpoint has been built."
+    },
+    {
+      "title": "Missing Fuzzy Search / Typo Correction Support",
+      "roleTag": "BARCAN-TAG-09",
+      "jtbd": "When a user enters a search query with spelling errors or typos, I want the system to match relevant documents and auto-correct or suggest correction terms, so that the search process is efficient and user-friendly.",
+      "acceptanceCriteria": "Given a document with the title 'Положение о практике' exists, When a user searches for 'Полажение о практик' (with typos), Then the search returns the matching document and provides spelling correction hints.",
+      "reason": "Literal brief requirement in Section 4 'Поиск и навигация: автоподсказки и исправление опечаток'. While auto-suggestions are simulated in Svelte, no typo correction (fuzzy matching, e.g. Levenshtein distance) is implemented on the backend search route."
+    },
+    {
+      "title": "Missing User Account and Access Permissions Configuration Dashboard",
+      "roleTag": "BARCAN-TAG-09",
+      "jtbd": "When an Administrator needs to register new teachers or students or adjust their roles, I want an administrative dashboard to manage users and configure permissions, so that access control policies are accurately enforced.",
+      "acceptanceCriteria": "Given an Administrator is logged in, When they access the user management interface, Then they can view, create, update, or revoke user accounts and assign roles such as Teacher, Student, or Content-manager.",
+      "reason": "Literal brief requirement in Section 3 'Администратор: ... управление пользователями, настройка прав'."
+    },
+    {
+      "title": "Missing Administrative Review Interface for Document Actualization Requests",
+      "roleTag": "BARCAN-TAG-09",
+      "jtbd": "When a Content Manager or Administrator needs to address feedback from educators, I want to list and manage pending actualization requests, so that outdated educational documents are promptly revised or archived.",
+      "acceptanceCriteria": "Given multiple actualization requests have been submitted, When an Administrator requests a list of all requests, Then the server returns a paginated list of actualization requests with their document IDs, requester details, reasons, and status.",
+      "reason": "Domain-standard expectation concretely implied by Section 4 'Работа с контентом: возможность комментирования и отправки запросов на актуализацию'. Although the backend exposes a write-only POST endpoint for requests, there is no GET inbox, overview page, or review view for moderators to act on these alerts."
+    },
+    {
+      "title": "Missing Document Version Restoration / Rollback Mechanism",
+      "roleTag": "BARCAN-TAG-09",
+      "jtbd": "When an incorrect or corrupt document version is published, I want to rollback/restore the document to a previously archived version, so that users do not download invalid or outdated guidelines.",
+      "acceptanceCriteria": "Given a document has multiple archived versions, When an Administrator triggers a version restore command for a specific version number, Then the target archived version is marked as the active/current version and the previous active version is archived.",
+      "reason": "Domain-standard expectation concretely implied by Section 4 'Работа с контентом: версионность документов...' and Section 6 'При замене документа автоматически сохранять предыдущую версию в архиве...'. Standard version control requires the ability to revert changes, but currently, version history is read-only."
+    }
+  ]
+}
