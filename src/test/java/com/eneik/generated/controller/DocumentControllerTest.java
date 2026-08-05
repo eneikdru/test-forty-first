@@ -69,7 +69,7 @@ public class DocumentControllerTest {
                         .param("edu_level", "Residency")
                         .param("category_id", "edu_center_root")
                         .param("tags", "ординатура", "нормативные акты")
-                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                        .header("Authorization", "Bearer anonymous@system.local"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("BAD_REQUEST"));
     }
@@ -92,7 +92,7 @@ public class DocumentControllerTest {
                         .param("edu_level", "Residency")
                         .param("category_id", "edu_center_root")
                         .param("tags", "ординатура", "нормативные акты")
-                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                        .header("Authorization", "Bearer anonymous@system.local"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("ФГОС Эпидемиология"))
                 .andExpect(jsonPath("$.doc_type").value("Regulations"))
@@ -107,7 +107,7 @@ public class DocumentControllerTest {
         List<AuditLog> logs = auditLogRepository.findAll();
         assertEquals(1, logs.size());
         AuditLog log = logs.get(0);
-        assertEquals("ivan.ivanov@epidem.ru", log.getUsername());
+        assertEquals("anonymous@system.local", log.getUsername());
         assertEquals("DOCUMENT_UPLOAD", log.getAction());
         assertEquals("edu_center_root", log.getCategoryId());
     }

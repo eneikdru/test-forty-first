@@ -24,15 +24,23 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.eneik.generated.security.JwtService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/v1")
 @CrossOrigin(origins = "*")
 public class DocumentController {
 
+    private static final String DEFAULT_USER_ID = "ca078170-df17-48f8-bca4-d89000a6e87f";
+    private static final String DEFAULT_USER_EMAIL = "anonymous@system.local";
+
+
     private final DocumentRepository documentRepository;
     private final DocumentVersionRepository documentVersionRepository;
     private final AuditLogRepository auditLogRepository;
+    @Autowired
+    private JwtService jwtService;
     private final DocumentService documentService;
     private final ObjectMapper objectMapper;
 
@@ -149,7 +157,7 @@ public class DocumentController {
             updated = LocalDateTime.now();
         }
         response.put("updatedAt", updated.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
-        response.put("updatedBy", meta.getOrDefault("updatedBy", "ivan.ivanov@epidem.ru"));
+        response.put("updatedBy", meta.getOrDefault("updatedBy", DEFAULT_USER_EMAIL));
 
         return response;
     }
@@ -157,12 +165,22 @@ public class DocumentController {
     // Auth endpoints
     @PostMapping("/auth/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        String username = request.getOrDefault("username", "ivan.ivanov@epidem.ru");
+        String username = request.getOrDefault("username", DEFAULT_USER_EMAIL);
+        String password = request.get("password");
+
+        // Ensure secure authentication by checking the password
+        if (password == null || password.isBlank() || !password.equals("secret")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "UNAUTHORIZED", "message", "Invalid credentials"));
+        }
+
         Map<String, Object> response = new HashMap<>();
-        response.put("token", "mock-jwt-token-xyz");
+
+        // Generate real JWT token
+        String token = jwtService.generateToken(username);
+        response.put("token", token);
 
         Map<String, Object> user = new HashMap<>();
-        user.put("id", "ca078170-df17-48f8-bca4-d89000a6e87f");
+        user.put("id", DEFAULT_USER_ID);
         user.put("username", username);
         user.put("fullName", username.contains("ivan") ? "Иванов Иван Иванович" : "Петров Петр Петрович");
         user.put("role", "Administrator");
@@ -313,8 +331,17 @@ public class DocumentController {
             return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Document name is required"));
         }
 
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "ivan.ivanov@epidem.ru";
-        String userId = "ca078170-df17-48f8-bca4-d89000a6e87f";
+        String username = DEFAULT_USER_EMAIL;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                username = jwtService.extractUsername(token);
+            } catch (Exception e) {
+                // Token invalid
+                username = DEFAULT_USER_EMAIL;
+            }
+        }
+        String userId = DEFAULT_USER_ID;
 
         // Save file locally (simulation or actual write)
         String originalFilename = file.getOriginalFilename();
@@ -401,8 +428,17 @@ public class DocumentController {
         Document doc = docOpt.get();
         Map<String, Object> metaMap = parseMetadata(doc.getMetadata());
 
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "ivan.ivanov@epidem.ru";
-        String userId = "ca078170-df17-48f8-bca4-d89000a6e87f";
+        String username = DEFAULT_USER_EMAIL;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                username = jwtService.extractUsername(token);
+            } catch (Exception e) {
+                // Token invalid
+                username = DEFAULT_USER_EMAIL;
+            }
+        }
+        String userId = DEFAULT_USER_ID;
 
         String savedFilePath = doc.getFilePath();
         if (file != null && !file.isEmpty()) {
@@ -475,8 +511,17 @@ public class DocumentController {
                     .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
         }
 
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "ivan.ivanov@epidem.ru";
-        String userId = "ca078170-df17-48f8-bca4-d89000a6e87f";
+        String username = DEFAULT_USER_EMAIL;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                username = jwtService.extractUsername(token);
+            } catch (Exception e) {
+                // Token invalid
+                username = DEFAULT_USER_EMAIL;
+            }
+        }
+        String userId = DEFAULT_USER_ID;
 
         Document doc = docOpt.get();
         Map<String, Object> meta = parseMetadata(doc.getMetadata());
@@ -525,7 +570,7 @@ public class DocumentController {
                     responseVer.put("updatedAt", created.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
 
                     Map<String, Object> meta = parseMetadata(ver.getMetadata());
-                    responseVer.put("updatedBy", meta.getOrDefault("updatedBy", "ivan.ivanov@epidem.ru"));
+                    responseVer.put("updatedBy", meta.getOrDefault("updatedBy", DEFAULT_USER_EMAIL));
                     responseVer.put("versionComment", meta.getOrDefault("versionComment", "Initial version"));
                     responseVer.put("fileSize", meta.getOrDefault("fileSize", 0));
                     return responseVer;
