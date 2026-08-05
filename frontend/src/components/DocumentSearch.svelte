@@ -1281,7 +1281,7 @@
         <div class="border-t border-outline-variant pt-4 flex gap-3">
           <a
             href="/api/v1/documents/{selectedDocument.id}/export?format=pdf"
-            on:click|preventDefault={() => alert('Скачивание PDF начато (эмуляция)...')}
+            download
             class="flex-1 py-3 bg-primary text-on-primary-fixed text-center font-bold text-xs rounded hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
           >
             <span class="material-symbols-outlined text-sm">download</span>
@@ -1289,7 +1289,7 @@
           </a>
           <a
             href="/api/v1/documents/{selectedDocument.id}/export?format=docx"
-            on:click|preventDefault={() => alert('Скачивание DOCX начато (эмуляция)...')}
+            download
             class="flex-1 py-3 bg-surface-variant hover:bg-surface-container-highest text-[#d4e4fa] text-center font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 min-h-[44px]"
           >
             <span class="material-symbols-outlined text-sm">description</span>
