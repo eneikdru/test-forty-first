@@ -1,0 +1,44 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "b44b0e78-a118-42a2-a8a6-343e0b723aa4",
+      "sixSigmaMetric": "Reduce the number of orphaned PRs for terminal tasks from 1 to 0",
+      "tocConstraintRef": "Manual PR cleanup overhead",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Automatically close GitHub pull requests when their owning tasks transition to a closed terminal state"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Implement PR closure on task terminal state transition",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the terminal status transition for this epic, I want to invoke the GitHub API to close the PR, so that orphaned PRs do not accumulate.",
+          "acceptanceCriteria": "Given a task with an open pull request, When its status transitions to a closed terminal state, Then the GitHub API is called to close the pull request.\nGiven a task with no associated pull request, When its status transitions to a closed terminal state, Then the transition completes successfully without attempting to close a PR.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "GitHub API execution overhead",
+          "sixSigmaMetric": "Reduce the rate of orphaned PRs for closed tasks from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "Verify automatic PR closure on terminal task states",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing QA for this epic, I want to test the PR closure integration, so that the orphaned PR bug is demonstrably fixed across the system.",
+          "acceptanceCriteria": "Given a unit test environment with a mocked GitHub client, When the terminal state transition occurs, Then the test asserts the PR close endpoint is called.\nGiven an integration test environment, When a task lifecycle reaches a terminal state, Then the API contract for closing PRs is correctly executed.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Local test environment setup",
+          "sixSigmaMetric": "Increase test coverage for PR closure logic on terminal state transitions from 0% to 100%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
