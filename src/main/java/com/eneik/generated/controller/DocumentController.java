@@ -17,12 +17,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -36,14 +39,20 @@ public class DocumentController {
 
     private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
 
-    // Named Constants to prevent 'magic' values (Finding 1 & Finding 2)
-    private static final String DEFAULT_USERNAME = "ivan.ivanov@epidem.ru";
-    private static final String DEFAULT_USER_ID = "ca078170-df17-48f8-bca4-d89000a6e87f";
-    private static final String MOCK_JWT_TOKEN = "mock-jwt-token-xyz";
+    @Value("${security.default.username}")
+    private String defaultUsername;
+
+    @Value("${security.default.user-id}")
+    private String defaultUserId;
+
+    @Value("${security.default.full-name}")
+    private String defaultFullName;
+
+    @Value("${security.jwt.secret}")
+    private String jwtSecret;
+
     private static final String DEFAULT_ROLE = "Administrator";
     private static final String DEFAULT_CATEGORY_ID = "edu_center_root";
-    private static final String MOCKED_FULL_NAME_IVAN = "Иванов Иван Иванович";
-    private static final String MOCKED_FULL_NAME_PETR = "Петров Петр Петрович";
 
     private final DocumentRepository documentRepository;
     private final DocumentVersionRepository documentVersionRepository;
@@ -70,6 +79,119 @@ public class DocumentController {
         this.objectMapper = objectMapper;
         this.commentRepository = commentRepository;
         this.actualizationRequestRepository = actualizationRequestRepository;
+    }
+
+    private static class UserPrincipal {
+        private final String username;
+        private final String userId;
+        private final String fullName;
+        private final String role;
+
+        public UserPrincipal(String username, String userId, String fullName, String role) {
+            this.username = username;
+            this.userId = userId;
+            this.fullName = fullName;
+            this.role = role;
+        }
+
+        public String getUsername() { return username; }
+        public String getUserId() { return userId; }
+        public String getFullName() { return fullName; }
+        public String getRole() { return role; }
+    }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public static class UnauthorizedException extends RuntimeException {
+        private final String error;
+
+        public UnauthorizedException(String message) {
+            super(message);
+            this.error = "UNAUTHORIZED";
+        }
+
+        public UnauthorizedException(String error, String message) {
+            super(message);
+            this.error = error;
+        }
+
+        public String getError() {
+            return error;
+        }
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, String>> handleUnauthorized(UnauthorizedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", ex.getError(), "message", ex.getMessage()));
+    }
+
+    private String sign(String data, String secret) {
+        try {
+            javax.crypto.Mac sha256_HMAC = javax.crypto.Mac.getInstance("HmacSHA256");
+            javax.crypto.spec.SecretKeySpec secretKey = new javax.crypto.spec.SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            sha256_HMAC.init(secretKey);
+            byte[] hash = sha256_HMAC.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
+        } catch (Exception e) {
+            log.error("[DocumentController] HMAC-SHA256 signature generation failed", e);
+            throw new RuntimeException("Failed to sign data", e);
+        }
+    }
+
+    private UserPrincipal parseAuthHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new UnauthorizedException("MISSING_TOKEN", "Authorization header is missing or malformed");
+        }
+        String token = authHeader.substring(7).trim();
+        if (token.isEmpty()) {
+            throw new UnauthorizedException("MISSING_TOKEN", "Authorization token is empty");
+        }
+
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length == 3 && token.startsWith("eyJ")) {
+                // Verify JWT signature
+                String headerAndPayload = parts[0] + "." + parts[1];
+                String expectedSignature = sign(headerAndPayload, jwtSecret);
+
+                if (MessageDigest.isEqual(
+                        expectedSignature.getBytes(StandardCharsets.UTF_8),
+                        parts[2].getBytes(StandardCharsets.UTF_8))) {
+
+                    // Decribute / decode payload
+                    byte[] payloadBytes = Base64.getUrlDecoder().decode(parts[1]);
+                    Map<String, Object> claims = objectMapper.readValue(payloadBytes, new TypeReference<Map<String, Object>>() {});
+
+                    // Check expiration
+                    Number expNum = (Number) claims.get("exp");
+                    if (expNum != null && System.currentTimeMillis() / 1000 > expNum.longValue()) {
+                        log.warn("[DocumentController] JWT token has expired");
+                        throw new UnauthorizedException("TOKEN_EXPIRED", "Token has expired");
+                    }
+
+                    String sub = (String) claims.get("sub");
+                    String userId = (String) claims.get("userId");
+                    String fullName = (String) claims.get("fullName");
+                    String role = (String) claims.get("role");
+
+                    return new UserPrincipal(
+                            sub != null ? sub : defaultUsername,
+                            userId != null ? userId : defaultUserId,
+                            fullName != null ? fullName : defaultFullName,
+                            role != null ? role : DEFAULT_ROLE
+                    );
+                } else {
+                    log.warn("[DocumentController] JWT token signature verification failed");
+                    throw new UnauthorizedException("INVALID_TOKEN", "Signature verification failed");
+                }
+            }
+        } catch (UnauthorizedException ue) {
+            throw ue;
+        } catch (Exception e) {
+            log.warn("[DocumentController] Failed to parse Bearer token as JWT: {}", token, e);
+        }
+
+        throw new UnauthorizedException("INVALID_TOKEN", "Token parsing failed or signature is invalid");
     }
 
     private String longToUuidString(Long id) {
@@ -167,7 +289,7 @@ public class DocumentController {
             updated = LocalDateTime.now();
         }
         response.put("updatedAt", updated.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
-        response.put("updatedBy", meta.getOrDefault("updatedBy", DEFAULT_USERNAME));
+        response.put("updatedBy", meta.getOrDefault("updatedBy", defaultUsername));
 
         return response;
     }
@@ -175,14 +297,61 @@ public class DocumentController {
     // Auth endpoints
     @PostMapping("/auth/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        String username = request.getOrDefault("username", DEFAULT_USERNAME);
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", MOCK_JWT_TOKEN);
+        String username = request.get("username");
+        String password = request.get("password");
 
-        Map<String, Object> user = new HashMap<>();
-        user.put("id", DEFAULT_USER_ID);
+        if (username == null || username.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Username is required"));
+        }
+        if (password == null || password.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Password is required"));
+        }
+
+        long now = System.currentTimeMillis() / 1000;
+        long exp = now + 86400; // 24 hours validity
+
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("sub", username);
+        claims.put("userId", defaultUserId);
+
+        String fullName;
+        if (username.equals(defaultUsername)) {
+            fullName = defaultFullName;
+        } else {
+            String pre = username.split("@")[0].replace(".", " ");
+            StringBuilder sb = new StringBuilder();
+            for (String part : pre.split(" ")) {
+                if (!part.isEmpty()) {
+                    sb.append(Character.toUpperCase(part.charAt(0))).append(part.substring(1)).append(" ");
+                }
+            }
+            fullName = sb.toString().trim();
+        }
+
+        claims.put("fullName", fullName);
+        claims.put("role", DEFAULT_ROLE);
+        claims.put("iat", now);
+        claims.put("exp", exp);
+
+        String token;
+        try {
+            String header = Base64.getUrlEncoder().withoutPadding().encodeToString("{\"alg\":\"HS256\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
+            String payload = Base64.getUrlEncoder().withoutPadding().encodeToString(objectMapper.writeValueAsString(claims).getBytes(StandardCharsets.UTF_8));
+            String signature = sign(header + "." + payload, jwtSecret);
+            token = header + "." + payload + "." + signature;
+        } catch (Exception e) {
+            log.error("[DocumentController] Failed to generate JWT", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "SERVER_ERROR", "message", "Internal error"));
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("token", token);
+
+        Map<String, Object> user = new LinkedHashMap<>();
+        user.put("id", defaultUserId);
         user.put("username", username);
-        user.put("fullName", username.contains("ivan") ? MOCKED_FULL_NAME_IVAN : MOCKED_FULL_NAME_PETR);
+        user.put("fullName", fullName);
         user.put("role", DEFAULT_ROLE);
 
         response.put("user", user);
@@ -226,7 +395,7 @@ public class DocumentController {
                     }
                     // Filter edu_level
                     if (edu_level != null && !edu_level.isBlank()) {
-                        if (!edu_level.equalsIgnoreCase((String) doc.get("edu_level"))) {
+                        if (!doc_level_matches(doc, edu_level)) {
                             return false;
                         }
                     }
@@ -310,6 +479,10 @@ public class DocumentController {
         return ResponseEntity.ok(response);
     }
 
+    private boolean doc_level_matches(Map<String, Object> doc, String edu_level) {
+        return edu_level.equalsIgnoreCase((String) doc.get("edu_level"));
+    }
+
     // Upload a new document
     @PostMapping(value = "/documents", consumes = "multipart/form-data")
     public ResponseEntity<?> uploadDocument(
@@ -323,6 +496,10 @@ public class DocumentController {
             @RequestParam(value = "tags", required = false) List<String> tags,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
+        UserPrincipal principal = parseAuthHeader(authHeader);
+        String username = principal.getUsername();
+        String userId = principal.getUserId();
+
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "File is empty"));
         }
@@ -330,9 +507,6 @@ public class DocumentController {
         if (name == null || name.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Document name is required"));
         }
-
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : DEFAULT_USERNAME;
-        String userId = DEFAULT_USER_ID;
 
         // Save file locally delegating to FileStorageService
         String savedFilePath;
@@ -401,6 +575,10 @@ public class DocumentController {
             @RequestParam(value = "version_comment", required = false) String versionComment,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
+        UserPrincipal principal = parseAuthHeader(authHeader);
+        String username = principal.getUsername();
+        String userId = principal.getUserId();
+
         Long docId = uuidStringToLong(id);
         if (docId == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -415,9 +593,6 @@ public class DocumentController {
 
         Document doc = docOpt.get();
         Map<String, Object> metaMap = parseMetadata(doc.getMetadata());
-
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : DEFAULT_USERNAME;
-        String userId = DEFAULT_USER_ID;
 
         String savedFilePath = doc.getFilePath();
         if (file != null && !file.isEmpty()) {
@@ -476,6 +651,10 @@ public class DocumentController {
             @PathVariable String id,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
+        UserPrincipal principal = parseAuthHeader(authHeader);
+        String username = principal.getUsername();
+        String userId = principal.getUserId();
+
         Long docId = uuidStringToLong(id);
         if (docId == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -487,9 +666,6 @@ public class DocumentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
         }
-
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : DEFAULT_USERNAME;
-        String userId = DEFAULT_USER_ID;
 
         Document doc = docOpt.get();
         Map<String, Object> meta = parseMetadata(doc.getMetadata());
@@ -538,7 +714,7 @@ public class DocumentController {
                     responseVer.put("updatedAt", created.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
 
                     Map<String, Object> meta = parseMetadata(ver.getMetadata());
-                    responseVer.put("updatedBy", meta.getOrDefault("updatedBy", DEFAULT_USERNAME));
+                    responseVer.put("updatedBy", meta.getOrDefault("updatedBy", defaultUsername));
                     responseVer.put("versionComment", meta.getOrDefault("versionComment", "Initial version"));
                     responseVer.put("fileSize", meta.getOrDefault("fileSize", 0));
                     return responseVer;
@@ -668,6 +844,12 @@ public class DocumentController {
             @RequestBody Map<String, String> body,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
+        UserPrincipal principal = parseAuthHeader(authHeader);
+        String username = principal.getUsername();
+        String userId = principal.getUserId();
+        String fullName = principal.getFullName();
+        String role = principal.getRole();
+
         Long docId = uuidStringToLong(id);
         if (docId == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -685,12 +867,6 @@ public class DocumentController {
             return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Comment text is required"));
         }
 
-        String token = (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
-        String username = (token != null && !token.equals(MOCK_JWT_TOKEN)) ? token : DEFAULT_USERNAME;
-        String userId = DEFAULT_USER_ID;
-        String fullName = username.contains("ivan") ? MOCKED_FULL_NAME_IVAN : MOCKED_FULL_NAME_PETR;
-        String role = DEFAULT_ROLE;
-
         Comment comment = new Comment(docOpt.get(), userId, username, fullName, role, text);
         comment = commentRepository.save(comment);
 
@@ -702,6 +878,12 @@ public class DocumentController {
             @PathVariable String id,
             @RequestBody Map<String, String> body,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        UserPrincipal principal = parseAuthHeader(authHeader);
+        String username = principal.getUsername();
+        String userId = principal.getUserId();
+        String fullName = principal.getFullName();
+        String role = principal.getRole();
 
         Long docId = uuidStringToLong(id);
         if (docId == null) {
@@ -719,12 +901,6 @@ public class DocumentController {
         if (reason == null || reason.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Actualization reason is required"));
         }
-
-        String token = (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
-        String username = (token != null && !token.equals(MOCK_JWT_TOKEN)) ? token : DEFAULT_USERNAME;
-        String userId = DEFAULT_USER_ID;
-        String fullName = username.contains("ivan") ? MOCKED_FULL_NAME_IVAN : MOCKED_FULL_NAME_PETR;
-        String role = DEFAULT_ROLE;
 
         ActualizationRequest req = new ActualizationRequest(docOpt.get(), userId, username, fullName, role, reason, "PENDING");
         req = actualizationRequestRepository.save(req);
