@@ -1,0 +1,48 @@
+{
+  "epics": [
+    {
+      "existingEpicId": null,
+      "title": "Synchronize Terminal Task States with GitHub PRs",
+      "jtbd": "When a task transitions to a closed terminal state, I want its associated pull request to be closed automatically, so that orphaned PRs do not accumulate.",
+      "kanoClass": "Must-Be",
+      "cynefinDomain": "complicated",
+      "sixSigmaMetric": "Reduce the number of orphaned PRs for terminal tasks from 1 to 0.",
+      "tocConstraintRef": "Task synchronization pipeline",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: The system must automatically close any open GitHub pull request associated with a task when that task's session status changes to closed_terminal_task."
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch task state transition to close orphaned PRs",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the GitHub synchronization for this epic, I want to patch the task state transition logic to invoke a PR close action, so that terminal tasks automatically close their open PRs.",
+          "acceptanceCriteria": "Given a task that has an associated open PR on GitHub\nWhen the task's session status is updated to closed_terminal_task\nThen the system must execute an API request to close the corresponding PR",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Task state transition logic",
+          "sixSigmaMetric": "Reduce the number of unhandled orphaned PRs from 1 to 0.",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "Verify automatic PR closure on terminal state",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing tests for this epic, I want to verify that the task state transition correctly triggers PR closure, so that the synchronization logic is proven reliable and regressions are prevented.",
+          "acceptanceCriteria": "Given a mocked GitHub client and a task with an open PR\nWhen the task is transitioned to closed_terminal_task\nThen the test must assert that the GitHub PR close method was called exactly once",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Task synchronization test coverage",
+          "sixSigmaMetric": "Increase test coverage for PR state synchronization from 0% to 100%.",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
