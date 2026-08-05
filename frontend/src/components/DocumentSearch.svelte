@@ -209,6 +209,7 @@
     const sessionUser = localStorage.getItem("lexicon_user");
     if (sessionUser) {
       user = JSON.parse(sessionUser);
+      fetchDocuments();
     }
 
     // Listen to network changes
@@ -239,8 +240,28 @@
     }
   }
 
+  async function fetchDocuments() {
+    if (isOffline) return;
+    try {
+      const res = await fetch('/api/v1/documents', {
+        headers: {
+          "Authorization": "Bearer mock-jwt-token-xyz"
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.content) {
+          documents = data.content;
+          localStorage.setItem("lexicon_documents", JSON.stringify(documents));
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching documents:", err);
+    }
+  }
+
   // Handle Login authentication
-  function handleLogin(e) {
+  async function handleLogin(e) {
     e.preventDefault();
     categoryError = "";
     if (!loginUsername) {
@@ -263,6 +284,8 @@
     localStorage.setItem("lexicon_user", JSON.stringify(loggedUser));
     loginError = "";
     selectedCategory = ""; // Reset category filter on login
+
+    await fetchDocuments();
   }
 
   // Handle Logout
@@ -419,7 +442,7 @@
   });
 
   // Open document details drawer
-  function openDocumentDetails(doc) {
+  async function openDocumentDetails(doc) {
     if (doc.category_id === "edu_budget_finance" && user && user.role === "Student") {
       categoryError = "Доступ запрещен. Ординаторы, аспиранты и слушатели не имеют прав доступа к бюджетным файлам.";
       selectedDocument = null;
@@ -435,6 +458,24 @@
     editDescription = doc.description;
     editError = "";
     editSuccess = "";
+
+    if (!isOffline) {
+      try {
+        const res = await fetch(`/api/v1/documents/${doc.id}/comments`, {
+          headers: {
+            "Authorization": "Bearer mock-jwt-token-xyz"
+          }
+        });
+        if (res.ok) {
+          const fetchedComments = await res.json();
+          commentsDb[doc.id] = fetchedComments;
+        } else {
+          console.error("Failed to fetch comments");
+        }
+      } catch (err) {
+        console.error("Error fetching comments:", err);
+      }
+    }
   }
 
   function handleEditClick() {
@@ -490,31 +531,62 @@
   }
 
   // Post a new comment
-  function postComment() {
+  async function postComment() {
     if (!newCommentText || isOffline) return;
 
-    const newComment = {
-      id: "c-" + Date.now(),
-      user: `${user.fullName} (${getRoleLabel(user.role)})`,
-      text: newCommentText,
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const res = await fetch(`/api/v1/documents/${selectedDocument.id}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user ? user.username : 'mock-jwt-token-xyz'}`
+        },
+        body: JSON.stringify({
+          text: newCommentText
+        })
+      });
 
-    const docComments = commentsDb[selectedDocument.id] || [];
-    commentsDb[selectedDocument.id] = [...docComments, newComment];
-    newCommentText = "";
+      if (res.ok) {
+        const createdComment = await res.json();
+        const docComments = commentsDb[selectedDocument.id] || [];
+        commentsDb[selectedDocument.id] = [...docComments, createdComment];
+        newCommentText = "";
 
-    // Re-trigger Svelte reactive rendering for selectedDocument
-    selectedDocument = { ...selectedDocument };
+        // Re-trigger Svelte reactive rendering for selectedDocument
+        selectedDocument = { ...selectedDocument };
+      } else {
+        console.error("Failed to post comment");
+      }
+    } catch (err) {
+      console.error("Error posting comment:", err);
+    }
   }
 
   // Send request for document actualization
-  function sendActualizationRequest() {
+  async function sendActualizationRequest() {
     if (!actualizationReason || isOffline) return;
 
-    // Simulate API request to "/documents/{id}/actualization-request"
-    actualizationSuccess = true;
-    actualizationReason = "";
+    try {
+      const res = await fetch(`/api/v1/documents/${selectedDocument.id}/actualization-request`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user ? user.username : 'mock-jwt-token-xyz'}`
+        },
+        body: JSON.stringify({
+          reason: actualizationReason
+        })
+      });
+
+      if (res.ok) {
+        actualizationSuccess = true;
+        actualizationReason = "";
+      } else {
+        console.error("Failed to send actualization request");
+      }
+    } catch (err) {
+      console.error("Error sending actualization request:", err);
+    }
   }
 
   // Get localized document type translation
@@ -1207,7 +1279,11 @@
                   {#each commentsDb[selectedDocument.id] as comment}
                     <div class="p-3 bg-surface-container-low border border-outline-variant/60 rounded space-y-1">
                       <div class="flex justify-between text-[11px] font-semibold">
-                        <span class="text-primary">{comment.user}</span>
+                        <span class="text-primary">
+                          {typeof comment.user === 'object' && comment.user !== null
+                            ? `${comment.user.fullName} (${getRoleLabel(comment.user.role)})`
+                            : comment.user}
+                        </span>
                         <span class="text-on-surface-variant">{formatDate(comment.createdAt)}</span>
                       </div>
                       <p class="text-xs text-on-surface">{comment.text}</p>
@@ -1228,6 +1304,7 @@
                   ></textarea>
                   <div class="flex justify-end">
                     <button
+                      id="submit-comment-btn"
                       on:click={postComment}
                       disabled={!newCommentText || isOffline}
                       class="px-4 py-2 bg-primary text-on-primary-fixed hover:bg-opacity-90 disabled:opacity-50 text-xs font-bold rounded flex items-center gap-1.5 transition-all"
@@ -1264,6 +1341,7 @@
                     class="w-full bg-surface-container-lowest border border-outline-variant rounded p-2 text-xs focus:border-primary focus:ring-0 text-on-surface"
                   />
                   <button
+                    id="submit-actualization-btn"
                     on:click={sendActualizationRequest}
                     disabled={!actualizationReason || isOffline}
                     class="w-full py-2 bg-error-container text-on-error-container hover:bg-opacity-85 disabled:opacity-50 text-xs font-bold rounded transition-colors"
