@@ -1,0 +1,306 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "0f1ab2ff-2a45-4a15-a215-7c5bbc3a08fa",
+      "sixSigmaMetric": "Reduce critical code hygiene, security, and localization violations from 7 to 0",
+      "tocConstraintRef": "Core Knowledge Base technical debt",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Remove magic constants from DocumentController.java and extract them to named constants",
+        "R2: Remove hardcoded PII and mocked JWT token from DocumentController.java",
+        "R3: Ensure serializeMetadata properly logs IOExceptions instead of silently swallowing them",
+        "R4: Implement real authentication logic for the /auth/login endpoint to replace the hardcoded fixture",
+        "R5: Handle IOExceptions correctly in serializeMetadata instead of returning fake empty JSON",
+        "R6: Separate routing logic from file I/O operations in DocumentController by delegating to a service layer",
+        "R7: Ensure the frontend UI in DocumentSearch.svelte is strictly in Russian, removing English or placeholder text"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "DocumentController Code Hygiene and Architecture Refactor",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing backend refactoring for this epic, I want to clean up magic strings, handle exceptions correctly, and extract file I/O to a service layer, so that the controller is declarative and safe",
+          "acceptanceCriteria": "Given DocumentController with hardcoded values and procedural file I/O,\nWhen the refactoring is applied,\nThen all constants are named, exceptions are logged, and file operations reside in a dedicated service layer.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "DocumentController maintainability",
+          "sixSigmaMetric": "Reduce magic strings and swallowed exceptions in DocumentController from 5 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1",
+            "R3",
+            "R5",
+            "R6"
+          ]
+        },
+        {
+          "title": "Authentication and Security Implementation",
+          "roleTag": "BARCAN-TAG-07",
+          "jtbd": "When implementing authentication for this epic, I want to replace fake endpoints and mocked tokens with real secure authentication logic, so that access control is strictly enforced",
+          "acceptanceCriteria": "Given an unauthenticated request to /auth/login,\nWhen credentials are provided,\nThen a valid real JWT token is generated and returned, with no hardcoded PII stored in plain text.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Authentication enforcement mechanism",
+          "sixSigmaMetric": "Reduce mocked authentication fixtures and hardcoded PII from 2 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R2",
+            "R4"
+          ]
+        },
+        {
+          "title": "Frontend UI Localization Enforcement",
+          "roleTag": "BARCAN-TAG-11",
+          "jtbd": "When implementing UI localization for this epic, I want to remove all non-Russian strings from DocumentSearch.svelte, so that the UI strictly adheres to the client language specification",
+          "acceptanceCriteria": "Given DocumentSearch.svelte with English or technical placeholders,\nWhen the component is reviewed and updated,\nThen only Russian texts remain visible in the user interface.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Frontend localization consistency",
+          "sixSigmaMetric": "Reduce non-Russian text instances in DocumentSearch.svelte from 3 to 0",
+          "hasUi": true,
+          "requirementRefs": [
+            "R7"
+          ]
+        },
+        {
+          "title": "QA Verification for Knowledge Base Tech Debt Fixes",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing QA verification for this epic, I want to test the refactored controller, new auth flow, and localized UI, so that no regressions are introduced",
+          "acceptanceCriteria": "Given the updated Knowledge Base Portal codebase,\nWhen the test suite runs,\nThen unit tests verify controller logic, integration tests verify the real auth endpoints, and E2E tests confirm the strictly Russian UI works correctly.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Test coverage for core portal",
+          "sixSigmaMetric": "Increase test coverage for the refactored endpoints and UI components to 100%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1",
+            "R2",
+            "R3",
+            "R4",
+            "R5",
+            "R6",
+            "R7"
+          ]
+        }
+      ]
+    },
+    {
+      "existingEpicId": "9ee092c2-261d-4e6f-9fe4-3fef14c32365",
+      "sixSigmaMetric": "Increase the success rate of actual analytics data transmissions from 0% to 100%",
+      "tocConstraintRef": "EIOS data synchronization pipeline",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Implement real data transmission in the sendAnalyticsExport method instead of adding records to an in-memory list"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "EIOS Analytics Export Integration",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing analytics export for this epic, I want to transmit data to the real EIOS API instead of faking success, so that automatic synchronization is seamless",
+          "acceptanceCriteria": "Given an analytics export request in DefaultEiosClient,\nWhen the eiosApiUrl is configured,\nThen the data is actually transmitted to the remote API and not just logged locally.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "External API transmission",
+          "sixSigmaMetric": "Reduce fake in-memory export completions from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "QA Verification for EIOS Analytics Integration",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing QA verification for this epic, I want to validate the actual transmission logic to EIOS, so that data synchronization operates reliably",
+          "acceptanceCriteria": "Given the updated DefaultEiosClient,\nWhen analytics are exported,\nThen unit tests mock the HTTP client, and integration tests verify the correct payload format is sent to the configured API.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Test coverage for EIOS sync",
+          "sixSigmaMetric": "Ensure 100% test coverage for the new EIOS HTTP transmission logic",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    },
+    {
+      "existingEpicId": null,
+      "title": "Document Export Capabilities",
+      "jtbd": "When I need offline access to normative materials, I want to export documents to PDF and DOCX formats, so that I can securely use them outside the platform.",
+      "kanoClass": "Performance",
+      "cynefinDomain": "complicated",
+      "sixSigmaMetric": "Increase document export functionality completion from 0% to 100%",
+      "tocConstraintRef": "Document formatting and generation pipeline",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Create backend export endpoints in DocumentController to support PDF and DOCX generation",
+        "R2: Wire the 'Скачать PDF' and 'Скачать DOCX' buttons in DocumentSearch.svelte to the new backend endpoints"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Architecture Spike for Document Export Libraries",
+          "roleTag": "BARCAN-TAG-09",
+          "jtbd": "When implementing export research for this epic, I want to decide on the most suitable Java libraries for PDF and DOCX generation, so that the export endpoints are built on a solid foundation",
+          "acceptanceCriteria": "Given the requirement to generate PDF and DOCX files,\nWhen the spike is completed,\nThen an ADR is committed evaluating library options and selecting the best fit.",
+          "leanValue": "valuable",
+          "cynefinDomain": "complex",
+          "tocConstraintRef": "Export technology selection",
+          "sixSigmaMetric": "Reduce architectural uncertainty regarding PDF/DOCX generation libraries from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "API Contract for Document Export",
+          "roleTag": "BARCAN-TAG-12",
+          "jtbd": "When implementing the API contract for this epic, I want to define the request and response shapes for PDF and DOCX downloads, so that backend and frontend can develop in parallel",
+          "acceptanceCriteria": "Given the need for document exports,\nWhen the API contract is finalized,\nThen OpenAPI specs clearly define the /export/pdf and /export/docx endpoints with appropriate binary response types.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Backend and frontend integration contract",
+          "sixSigmaMetric": "Reduce API contract ambiguity for export endpoints from 100% to 0%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1",
+            "R2"
+          ]
+        },
+        {
+          "title": "Backend Document Export Endpoints",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing export endpoints for this epic, I want to generate and return valid PDF and DOCX files, so that users can download documents for offline use",
+          "acceptanceCriteria": "Given a valid document ID,\nWhen the export endpoints are called,\nThen properly formatted PDF or DOCX binary streams are returned.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "PDF and DOCX generation logic",
+          "sixSigmaMetric": "Increase successful backend document generation responses from 0% to 99.9%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "Frontend Document Export Integration",
+          "roleTag": "BARCAN-TAG-11",
+          "jtbd": "When implementing frontend export integration for this epic, I want to wire the download buttons to real API calls, so that users can actually download the files instead of seeing a fake alert",
+          "acceptanceCriteria": "Given the 'Скачать PDF' and 'Скачать DOCX' buttons,\nWhen a user clicks them,\nThen a real API request is made and the resulting file is downloaded by the browser.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Frontend export button wiring",
+          "sixSigmaMetric": "Reduce unwired fake UI alerts for document downloads from 2 to 0",
+          "hasUi": true,
+          "requirementRefs": [
+            "R2"
+          ]
+        },
+        {
+          "title": "QA Verification for Document Export",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing QA verification for this epic, I want to test the full export pipeline, so that users consistently receive valid files",
+          "acceptanceCriteria": "Given the new document export feature,\nWhen tests are executed,\nThen unit tests verify document formatting, API tests verify binary endpoints, and E2E tests confirm successful browser downloads.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Export quality assurance",
+          "sixSigmaMetric": "Ensure 100% test coverage across unit, integration, and E2E layers for the export feature",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1",
+            "R2"
+          ]
+        }
+      ]
+    },
+    {
+      "existingEpicId": null,
+      "title": "Document Feedback and Actualization",
+      "jtbd": "When I notice outdated information in a document, I want to submit comments and actualization requests, so that the knowledge base remains accurate and up to date.",
+      "kanoClass": "Attractive",
+      "cynefinDomain": "complicated",
+      "sixSigmaMetric": "Reduce the number of dropped user feedback submissions from 100% to 0%",
+      "tocConstraintRef": "User feedback persistence layer",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Create database models and backend endpoints to process and persist document comments and actualization requests",
+        "R2: Wire the postComment and sendActualizationRequest functions in DocumentSearch.svelte to make real API calls"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "API Contract for Document Feedback",
+          "roleTag": "BARCAN-TAG-12",
+          "jtbd": "When implementing the API contract for this epic, I want to define the payload structures for comments and requests, so that both backend and frontend have a unified agreement",
+          "acceptanceCriteria": "Given the need to submit comments and actualization requests,\nWhen the API contract is defined,\nThen OpenAPI specs contain the routes and DTOs for submitting user feedback.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Feedback API contract",
+          "sixSigmaMetric": "Reduce API contract ambiguity for feedback endpoints from 100% to 0%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1",
+            "R2"
+          ]
+        },
+        {
+          "title": "Data Schema for Document Feedback",
+          "roleTag": "BARCAN-TAG-08",
+          "jtbd": "When implementing the data schema for this epic, I want to create the necessary tables and models, so that user comments and actualization requests can be persisted",
+          "acceptanceCriteria": "Given a database missing feedback tables,\nWhen the Flyway migration is executed,\nThen tables for document comments and actualization requests are created with proper constraints.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Database schema for feedback",
+          "sixSigmaMetric": "Ensure 100% successful database migrations for the new feedback tables",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "Backend Endpoints for Document Feedback",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing feedback endpoints for this epic, I want to process and save user comments and actualization requests, so that they are reliably stored in the database",
+          "acceptanceCriteria": "Given a valid user feedback request,\nWhen the new endpoints are called,\nThen the data is validated and persisted securely in the database.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Backend feedback processing",
+          "sixSigmaMetric": "Increase the success rate of persisting feedback requests from 0% to 99.9%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "Frontend Integration for Document Feedback",
+          "roleTag": "BARCAN-TAG-11",
+          "jtbd": "When implementing frontend feedback integration for this epic, I want to wire the comment and actualization UI to the backend, so that local state is no longer silently dropped",
+          "acceptanceCriteria": "Given the unwired postComment and sendActualizationRequest functions,\nWhen they are updated,\nThen they correctly make API calls to the backend and handle responses appropriately.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Frontend feedback transmission",
+          "sixSigmaMetric": "Reduce silently dropped frontend feedback submissions from 2 to 0",
+          "hasUi": true,
+          "requirementRefs": [
+            "R2"
+          ]
+        },
+        {
+          "title": "QA Verification for Document Feedback",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing QA verification for this epic, I want to test the full feedback submission lifecycle, so that no user feedback is lost",
+          "acceptanceCriteria": "Given the new document feedback feature,\nWhen tests are executed,\nThen unit tests verify logic, integration tests ensure database persistence, and E2E tests confirm successful UI submission.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Feedback feature quality assurance",
+          "sixSigmaMetric": "Ensure 100% test coverage across all layers for the document feedback feature",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1",
+            "R2"
+          ]
+        }
+      ]
+    }
+  ]
+}
