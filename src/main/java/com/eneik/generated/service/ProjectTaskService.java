@@ -30,8 +30,10 @@ public class ProjectTaskService {
     public boolean transitionTaskState(String taskId, String oldStatus, String newStatus) {
         log.info("[ProjectTaskService] Transitioning task {} from {} to {}", taskId, oldStatus, newStatus);
 
-        // Execute the database update within a transaction and return the task if a GitHub call is needed
-        ProjectTask taskToClose = transactionTemplate.execute(status -> {
+        // Execute the database update and any associated PR closure atomically within the same transaction.
+        // If the GitHub API call throws an exception, the transaction is automatically rolled back,
+        // preventing the task state from transitioning to "closed_terminal_task" when the PR closure fails.
+        Boolean success = transactionTemplate.execute(status -> {
             int updatedCount = projectTaskRepository.updateSessionStatusAtomically(
                     taskId, oldStatus, newStatus, timeService.getCurrentTime());
 
@@ -39,25 +41,19 @@ public class ProjectTaskService {
                 entityManager.flush();
                 entityManager.clear();
                 if ("closed_terminal_task".equals(newStatus)) {
-                    return projectTaskRepository.findByTaskId(taskId).orElse(null);
+                    ProjectTask taskToClose = projectTaskRepository.findByTaskId(taskId).orElse(null);
+                    if (taskToClose != null && taskToClose.getPrNumber() != null) {
+                        log.info("[ProjectTaskService] Task {} reached terminal state. Closing associated PR #{}", taskId, taskToClose.getPrNumber());
+                        githubClient.closePullRequest(taskToClose.getPrNumber());
+                    }
                 }
-                // Signal success but no GitHub action needed
-                return new ProjectTask();
+                return true;
             } else {
                 log.warn("[ProjectTaskService] Failed to transition task {}. It might not exist or its status is not {}", taskId, oldStatus);
-                return null;
+                return false;
             }
         });
 
-        // Now, OUTSIDE the transaction, perform the synchronous HTTP network IO
-        if (taskToClose != null) {
-            if (taskToClose.getId() != null && taskToClose.getPrNumber() != null) {
-                log.info("[ProjectTaskService] Task {} reached terminal state. Closing associated PR #{}", taskId, taskToClose.getPrNumber());
-                githubClient.closePullRequest(taskToClose.getPrNumber());
-            }
-            return true; // We successfully updated the database
-        }
-
-        return false;
+        return success != null && success;
     }
 }
