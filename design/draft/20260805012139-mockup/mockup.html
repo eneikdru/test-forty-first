@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FeedbackSync - Threads</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#ffb695",
+                        "outline-variant": "#c7c4d8",
+                        "on-tertiary-fixed-variant": "#7b2f00",
+                        "on-secondary-fixed-variant": "#38485d",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "surface-container-highest": "#e0e3e5",
+                        "primary-container": "#4f46e5",
+                        "inverse-surface": "#2d3133",
+                        "tertiary-container": "#a44100",
+                        "secondary": "#505f76",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#464555",
+                        "surface": "#f7f9fb",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "surface-variant": "#e0e3e5",
+                        "primary-fixed": "#e2dfff",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-container-high": "#e6e8ea",
+                        "on-secondary-container": "#54647a",
+                        "surface-tint": "#4d44e3",
+                        "inverse-on-surface": "#eff1f3",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#d8dadc",
+                        "secondary-fixed": "#d3e4fe",
+                        "on-tertiary-container": "#ffd2be",
+                        "on-background": "#191c1e",
+                        "background": "#f7f9fb",
+                        "primary": "#3525cd",
+                        "on-primary-fixed": "#0f0069",
+                        "tertiary": "#7e3000",
+                        "on-secondary-fixed": "#0b1c30",
+                        "outline": "#777587",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#b7c8e1",
+                        "on-surface": "#191c1e",
+                        "on-tertiary-fixed": "#351000",
+                        "surface-bright": "#f7f9fb",
+                        "on-primary-container": "#dad7ff",
+                        "secondary-container": "#d0e1fb",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#c3c0ff",
+                        "tertiary-fixed": "#ffdbcc",
+                        "surface-container": "#eceef0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "margin-mobile": "16px",
+                        "lg": "24px",
+                        "gutter": "16px",
+                        "margin-tablet": "24px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "sm": "8px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "code-label": ["JetBrains Mono"],
+                        "button-text": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-sm": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "display-sm": ["Geist"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "code-label": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "button-text": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-sm": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sync-pulse {
+            animation: syncPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes syncPulse {
+            0%, 100% { border-color: transparent; }
+            50% { border-color: #4f46e5; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col font-body-md pb-20">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-background text-primary dark:text-primary-fixed-dim font-headline-sm text-headline-sm w-full top-0 sticky border-b border-outline-variant dark:border-outline flat no shadows z-40">
+<div class="flex justify-between items-center px-md py-sm max-w-full">
+<button class="p-2 hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors duration-200 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">FeedbackSync</h1>
+<button class="p-2 hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors duration-200 rounded-full flex items-center justify-center text-primary dark:text-primary-fixed-dim">
+<span class="material-symbols-outlined">sync</span>
+</button>
+</div>
+<!-- Connectivity Slat -->
+<div class="bg-surface-container-low text-secondary py-1 px-md flex items-center justify-center gap-2 border-b border-outline-variant text-body-sm font-body-sm">
+<span class="material-symbols-outlined text-[16px]">cloud_done</span>
+<span>All changes saved locally</span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 p-margin-mobile flex flex-col gap-lg">
+<!-- Controls -->
+<div class="flex justify-between items-center">
+<div class="relative w-full max-w-[200px]">
+<input class="w-full bg-surface-container-lowest border border-outline-variant focus:border-primary focus:border-2 rounded-DEFAULT py-2 pl-8 pr-4 text-body-md font-body-md outline-none transition-all placeholder-secondary" placeholder="Search threads..." type="text"/>
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-secondary text-[18px]">search</span>
+</div>
+<button class="flex items-center gap-1 text-primary font-button-text text-button-text bg-surface-container-lowest border border-outline-variant px-3 py-2 rounded-DEFAULT">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                Filter
+            </button>
+</div>
+<!-- Feedback Cards List -->
+<div class="flex flex-col gap-md">
+<!-- Card 1: Synced -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-lg relative overflow-hidden flex flex-col">
+<div class="h-1 w-full bg-green-500 absolute top-0 left-0"></div> <!-- Sync Indicator -->
+<div class="p-md flex flex-col gap-sm">
+<div class="flex justify-between items-start">
+<span class="font-code-label text-code-label text-secondary bg-surface-container-low px-2 py-0.5 rounded">EPIC-204</span>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+<span class="font-body-sm text-body-sm">Synced 2m ago</span>
+</div>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Redesign Navigation Architecture</h2>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Users are reporting confusion when trying to locate their profile settings from the main dashboard. We need to reconsider the structural hierarchy.</p>
+<!-- Recent Comments Thread Summary -->
+<div class="mt-2 pl-3 border-l-2 border-outline-variant flex flex-col gap-2">
+<div class="flex gap-2 items-start">
+<div class="w-6 h-6 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-button-text text-body-sm flex-shrink-0">JS</div>
+<div class="flex-1">
+<p class="font-body-sm text-body-sm text-on-surface"><span class="font-semibold">Jane S.</span> - I agree, moving it to the top app bar might help.</p>
+</div>
+</div>
+</div>
+<div class="flex justify-end mt-2">
+<button class="text-primary font-button-text text-button-text flex items-center gap-1 hover:bg-surface-container-low px-2 py-1 rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]">forum</span>
+                            3 Comments
+                        </button>
+</div>
+</div>
+</article>
+<!-- Card 2: Syncing -->
+<article class="bg-surface-container-lowest border-2 border-outline-variant sync-pulse rounded-lg relative overflow-hidden flex flex-col">
+<div class="p-md flex flex-col gap-sm">
+<div class="flex justify-between items-start">
+<span class="font-code-label text-code-label text-secondary bg-surface-container-low px-2 py-0.5 rounded">BUG-912</span>
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[14px] animate-spin">sync</span>
+<span class="font-body-sm text-body-sm">Syncing...</span>
+</div>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Data Loss on Offline Reconnect</h2>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Critical issue where local drafts are overwritten by server state if the connection drops and reconnects during an active typing session.</p>
+<div class="flex justify-end mt-2">
+<button class="text-primary font-button-text text-button-text flex items-center gap-1 hover:bg-surface-container-low px-2 py-1 rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]">forum</span>
+                            1 Comment
+                        </button>
+</div>
+</div>
+</article>
+<!-- Card 3: Pending -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-lg relative overflow-hidden flex flex-col">
+<div class="h-1 w-full bg-secondary absolute top-0 left-0"></div> <!-- Sync Indicator -->
+<div class="p-md flex flex-col gap-sm">
+<div class="flex justify-between items-start">
+<span class="font-code-label text-code-label text-secondary bg-surface-container-low px-2 py-0.5 rounded">FEAT-105</span>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[14px]">cloud_off</span>
+<span class="font-body-sm text-body-sm">Pending sync</span>
+</div>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Implement Dark Mode Toggle</h2>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">Design system tokens are ready. Need frontend implementation to support manual toggling alongside system preference.</p>
+<div class="flex justify-end mt-2">
+<button class="text-primary font-button-text text-button-text flex items-center gap-1 hover:bg-surface-container-low px-2 py-1 rounded transition-colors">
+<span class="material-symbols-outlined text-[18px]">add_comment</span>
+                            Add Comment
+                        </button>
+</div>
+</div>
+</article>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface dark:bg-background font-button-text text-button-text fixed bottom-0 w-full z-50 border-t border-outline-variant dark:border-outline flat no shadows flex justify-around items-center h-16 px-md md:hidden">
+<!-- Feed (Inactive) -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-on-secondary-container dark:hover:text-on-primary-fixed active:scale-95 transition-transform duration-150 w-full" href="#">
+<span class="material-symbols-outlined mb-1">forum</span>
+<span>Feed</span>
+</a>
+<!-- Threads (Active) -->
+<a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed-dim bg-primary-container/10 dark:bg-primary-container/20 rounded-xl px-4 py-1 hover:text-on-secondary-container dark:hover:text-on-primary-fixed active:scale-95 transition-transform duration-150 w-full" href="#">
+<span class="material-symbols-outlined mb-1 filled-icon">chat_bubble</span>
+<span>Threads</span>
+</a>
+<!-- Sync (Inactive) -->
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim hover:text-on-secondary-container dark:hover:text-on-primary-fixed active:scale-95 transition-transform duration-150 w-full" href="#">
+<span class="material-symbols-outlined mb-1">cloud_sync</span>
+<span>Sync</span>
+</a>
+</nav>
+</body></html>
