@@ -61,7 +61,7 @@
     {
       id: "e5bf923d-4c5a-4fdf-91bf-a3c309503a4b",
       name: "Бюджетный план образовательного центра на 2026 год",
-      description: "Смета расходов и financial планирование образовательного центра ФБУН ЦНИИ Эпидемиологии.",
+      description: "Смета расходов и финансовое планирование образовательного центра ФБУН ЦНИИ Эпидемиологии.",
       doc_type: "Regulations",
       specialty: "Other",
       edu_level: "Residency",
@@ -172,7 +172,7 @@
           {
             id: "e5bf923d-4c5a-4fdf-91bf-a3c309503a4b",
             name: "Бюджетный план образовательного центра на 2026 год",
-            description: "Смета расходов и financial планирование образовательного центра ФБУН ЦНИИ Эпидемиологии.",
+            description: "Смета расходов и финансовое планирование образовательного центра ФБУН ЦНИИ Эпидемиологии.",
             doc_type: "Regulations",
             specialty: "Other",
             edu_level: "Residency",
@@ -583,7 +583,7 @@
   <header class="fixed top-0 w-full z-40 border-b border-outline-variant bg-surface-dim/95 backdrop-blur-md h-16 flex justify-between items-center px-4 md:px-8">
     <div class="flex items-center gap-3">
       <span class="material-symbols-outlined text-primary text-2xl" data-icon="terminal">terminal</span>
-      <h1 class="font-headline-md text-xl md:text-2xl font-bold text-primary tracking-tight">Lexicon Flux</h1>
+      <h1 class="font-headline-md text-xl md:text-2xl font-bold text-primary tracking-tight">ДокументПоиск</h1>
     </div>
 
     {#if user}
@@ -606,7 +606,7 @@
           aria-label="Переключить офлайн режим"
         >
           <span class="material-symbols-outlined text-sm">{isOffline ? 'cloud_off' : 'cloud_queue'}</span>
-          <span>{isOffline ? 'Офлайн-симуляция ON' : 'Сеть OK'}</span>
+          <span>{isOffline ? 'Офлайн-симуляция ВКЛ' : 'Сеть в норме'}</span>
         </button>
 
         <button
@@ -952,7 +952,7 @@
             <div class="bg-surface-container border border-outline-variant p-12 text-center rounded space-y-4">
               <span class="material-symbols-outlined text-5xl text-on-surface-variant" data-icon="search_off">search_off</span>
               <p class="text-base font-semibold text-[#d4e4fa]">Документов по вашему запросу не найдено</p>
-              <p class="text-sm text-on-surface-variant">Попробуйте изменить формулировку или сбросить active-фильтры.</p>
+              <p class="text-sm text-on-surface-variant">Попробуйте изменить формулировку или сбросить активные фильтры.</p>
             </div>
           {:else}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1003,7 +1003,7 @@
                       <div class="flex justify-between items-center text-[11px] text-[#869397] font-semibold">
                         <span class="flex items-center gap-1">
                           <span class="material-symbols-outlined text-xs">history</span>
-                          v{doc.version}
+                          версия {doc.version}
                         </span>
                         <span>{getEduLevelLabel(doc.edu_level)}</span>
                       </div>
@@ -1175,13 +1175,13 @@
                   </thead>
                   <tbody>
                     <tr class="border-b border-outline-variant/30">
-                      <td class="p-2 font-bold text-[#d4e4fa]">v{selectedDocument.version} (Текущая)</td>
+                      <td class="p-2 font-bold text-[#d4e4fa]">версия {selectedDocument.version} (Текущая)</td>
                       <td class="p-2">{formatDate(selectedDocument.updatedAt)}</td>
                       <td class="p-2">{selectedDocument.updatedBy}</td>
                     </tr>
                     {#if selectedDocument.version > 1}
                       <tr class="border-b border-outline-variant/30 bg-surface-container-low/20">
-                        <td class="p-2">v{selectedDocument.version - 1}</td>
+                        <td class="p-2">версия {selectedDocument.version - 1}</td>
                         <td class="p-2">12 июня 2026</td>
                         <td class="p-2">system@epidem.ru</td>
                       </tr>
@@ -1247,7 +1247,7 @@
                 Сообщить о неактуальности материала
               </h4>
               <p class="text-xs text-on-surface-variant leading-normal">
-                Если данный документ устарел или противоречит приказам Минздрава/Роспотребнадзора, отправьте official-запрос на актуализацию.
+                Если данный документ устарел или противоречит приказам Минздрава/Роспотребнадзора, отправьте официальный запрос на актуализацию.
               </p>
 
               {#if actualizationSuccess}
