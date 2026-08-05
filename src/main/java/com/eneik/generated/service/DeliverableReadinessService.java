@@ -45,4 +45,34 @@ public class DeliverableReadinessService {
 
         return (float) resolvedCount / cycleDeliverables.size();
     }
+
+    @Transactional(readOnly = true)
+    public boolean isDecompositionComplete(String cycleId) {
+        List<Deliverable> cycleDeliverables = deliverableRepository.findByCycleId(cycleId);
+        if (cycleDeliverables.isEmpty()) {
+            return false;
+        }
+        return cycleDeliverables.stream()
+                .allMatch(d -> !"pending".equalsIgnoreCase(d.getStatus()));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean getDecompositionComplete(String cycleId) {
+        return isDecompositionComplete(cycleId);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isStagnationWarningActive(String cycleId) {
+        List<Deliverable> cycleDeliverables = deliverableRepository.findByCycleId(cycleId);
+        if (cycleDeliverables.isEmpty()) {
+            return false;
+        }
+        return cycleDeliverables.stream()
+                .anyMatch(d -> "pending".equalsIgnoreCase(d.getStatus()));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isStagnationWarningDismissed(String cycleId) {
+        return !isStagnationWarningActive(cycleId);
+    }
 }

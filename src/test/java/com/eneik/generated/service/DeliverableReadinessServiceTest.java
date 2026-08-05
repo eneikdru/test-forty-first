@@ -83,4 +83,61 @@ public class DeliverableReadinessServiceTest {
         float newRatio = deliverableReadinessService.calculateReadinessRatio(cycleId);
         assertEquals(1.0f, newRatio, 0.001f, "New readiness ratio should be 1.0 after resolving all items");
     }
+
+    @Test
+    public void testDecompositionCompleteAndStagnationWarningWithAllMerged() {
+        String cycleId = "cycle-19-items";
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        timeService.setFixedTime(now);
+
+        // 1. Create a project where all 19 of 19 work items are merged
+        for (int i = 0; i < 19; i++) {
+            Deliverable d = new Deliverable(cycleId, "merged");
+            d.setLastUpdated(now);
+            deliverableRepository.save(d);
+        }
+
+        entityManager.flush();
+        entityManager.clear();
+
+        // 2. Evaluate the readiness state
+        boolean isComplete = deliverableReadinessService.isDecompositionComplete(cycleId);
+        boolean getComplete = deliverableReadinessService.getDecompositionComplete(cycleId);
+        boolean isStagnationActive = deliverableReadinessService.isStagnationWarningActive(cycleId);
+        boolean isStagnationDismissed = deliverableReadinessService.isStagnationWarningDismissed(cycleId);
+        float ratio = deliverableReadinessService.calculateReadinessRatio(cycleId);
+
+        // 3. Assertions
+        assertTrue(isComplete, "decompositionComplete must evaluate to true when all items are merged");
+        assertTrue(getComplete, "getDecompositionComplete must evaluate to true when all items are merged");
+        assertFalse(isStagnationActive, "Stagnation warning must not be active when 100% of items are merged");
+        assertTrue(isStagnationDismissed, "Stagnation warning must be dismissed when 100% of items are merged");
+        assertEquals(1.0f, ratio, 0.001f, "Readiness ratio should be exactly 1.0f (100%)");
+    }
+
+    @Test
+    public void testDecompositionIncompleteWithPendingItems() {
+        String cycleId = "cycle-pending";
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        timeService.setFixedTime(now);
+
+        Deliverable d1 = new Deliverable(cycleId, "merged");
+        d1.setLastUpdated(now);
+        Deliverable d2 = new Deliverable(cycleId, "pending");
+        d2.setLastUpdated(now);
+
+        deliverableRepository.save(d1);
+        deliverableRepository.save(d2);
+
+        entityManager.flush();
+        entityManager.clear();
+
+        boolean isComplete = deliverableReadinessService.isDecompositionComplete(cycleId);
+        boolean isStagnationActive = deliverableReadinessService.isStagnationWarningActive(cycleId);
+        boolean isStagnationDismissed = deliverableReadinessService.isStagnationWarningDismissed(cycleId);
+
+        assertFalse(isComplete, "decompositionComplete must evaluate to false when some items are pending");
+        assertTrue(isStagnationActive, "Stagnation warning must be active when some items are pending");
+        assertFalse(isStagnationDismissed, "Stagnation warning must not be dismissed when some items are pending");
+    }
 }
