@@ -136,4 +136,12 @@ public class DocumentFeedbackIntegrationTest {
         assertEquals(0, commentRepository.findByDocumentId(docId).size());
         assertEquals(0, actualizationRequestRepository.findByDocumentId(docId).size());
     }
+
+    @Test
+    public void testIdSequenceStartsAboveSeededDocuments() {
+        Document newDoc = new Document("Sequence Check Doc", "/path/to/seq.pdf", "{}");
+        newDoc = documentRepository.save(newDoc);
+        assertNotNull(newDoc.getId());
+        assertTrue(newDoc.getId() >= 100, "Expected new document ID to be at least 100 to avoid conflicts with seeded documents (1-6)");
+    }
 }
