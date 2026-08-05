@@ -116,7 +116,6 @@ public class ProjectTaskIntegrationTest {
     }
 
     @Test
-    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     public void testTaskTransitionToTerminalStateRollsBackOnPRClosureFailure() {
         // Stub the GitHub PR PATCH endpoint to return a 500 server error
         stubFor(patch(urlEqualTo("/repos/eneik/test-repo/pulls/88"))
@@ -127,21 +126,31 @@ public class ProjectTaskIntegrationTest {
         // Create a new task with an active PR
         ProjectTask task = new ProjectTask("task-failing-pr", 88, "in_progress");
         task.setLastUpdated(timeService.getCurrentTime());
-        projectTaskRepository.saveAndFlush(task);
+        projectTaskRepository.save(task);
+
+        // Commit the current test transaction to ensure the task is saved to DB
+        org.springframework.test.context.transaction.TestTransaction.flagForCommit();
+        org.springframework.test.context.transaction.TestTransaction.end();
+
+        // Start a new test transaction for the transition attempt
+        org.springframework.test.context.transaction.TestTransaction.start();
 
         // Transition should throw RuntimeException due to the GitHub API failure
         assertThrows(RuntimeException.class, () -> {
             projectTaskService.transitionTaskState("task-failing-pr", "in_progress", "closed_terminal_task");
         });
 
+        // Force a rollback of the transition transaction to physically roll back DB updates
+        org.springframework.test.context.transaction.TestTransaction.flagForRollback();
+        org.springframework.test.context.transaction.TestTransaction.end();
+
+        // Start a new test transaction to query the DB safely
+        org.springframework.test.context.transaction.TestTransaction.start();
+
         // Verify that because of the exception, the database transaction was rolled back.
         // Therefore, the task's session status remains unchanged ("in_progress").
         ProjectTask rolledBackTask = projectTaskRepository.findByTaskId("task-failing-pr").orElseThrow();
         assertEquals("in_progress", rolledBackTask.getSessionStatus(), "Session status should be rolled back and remain in_progress");
-
-        // Clean up
-        projectTaskRepository.delete(rolledBackTask);
-        projectTaskRepository.flush();
     }
 
     @Test
@@ -151,13 +160,17 @@ public class ProjectTaskIntegrationTest {
         task.setLastUpdated(timeService.getCurrentTime());
         projectTaskRepository.save(task);
 
+        // Commit the current test transaction to ensure the task is saved to DB
+        org.springframework.test.context.transaction.TestTransaction.flagForCommit();
+        org.springframework.test.context.transaction.TestTransaction.end();
+
+        // Start a new test transaction for the transition
+        org.springframework.test.context.transaction.TestTransaction.start();
+
         // Transition the task to closed_terminal_task
         boolean success = projectTaskService.transitionTaskState("task-no-pr", "in_progress", "closed_terminal_task");
 
         assertTrue(success, "Task transition should be successful even without PR");
-
-        // Clear persistence context to read fresh state from database
-        entityManager.clear();
 
         // Verify the database state was successfully updated to closed_terminal_task
         ProjectTask updatedTask = projectTaskRepository.findByTaskId("task-no-pr").orElseThrow();
