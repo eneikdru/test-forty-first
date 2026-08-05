@@ -34,6 +34,9 @@ public class WiremockIntegrationTest {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private DefaultEiosClient eiosClient;
+
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         wireMockServer = new WireMockServer(0);
@@ -117,5 +120,26 @@ public class WiremockIntegrationTest {
         Role viro = roleRepository.findByName("Virologist").orElse(null);
         assertNotNull(viro);
         assertEquals("Virus expert", viro.getDescription());
+    }
+
+    @Test
+    public void testEiosAnalyticsExportTransmitsToRemote() {
+        // Stub the EIOS analytics export endpoint
+        stubFor(post(urlEqualTo("/api/analytics"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        List<com.eneik.generated.model.EiosExportRecord> records = List.of(
+                new com.eneik.generated.model.EiosExportRecord("user_99", "DOWNLOAD_DOCUMENT", "doc_777", "DOCUMENT", java.time.LocalDateTime.now(), "{}")
+        );
+
+        eiosClient.sendAnalyticsExport(records);
+
+        verify(postRequestedFor(urlEqualTo("/api/analytics"))
+                .withRequestBody(matchingJsonPath("$[0].userId", equalTo("user_99")))
+                .withRequestBody(matchingJsonPath("$[0].actionType", equalTo("DOWNLOAD_DOCUMENT")))
+                .withRequestBody(matchingJsonPath("$[0].resourceId", equalTo("doc_777")))
+                .withRequestBody(matchingJsonPath("$[0].resourceType", equalTo("DOCUMENT")))
+        );
     }
 }

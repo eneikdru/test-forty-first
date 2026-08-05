@@ -15,6 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,6 +32,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1")
 @CrossOrigin(origins = "*")
 public class DocumentController {
+
+    private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
 
     private final DocumentRepository documentRepository;
     private final DocumentVersionRepository documentVersionRepository;
@@ -82,7 +87,8 @@ public class DocumentController {
         try {
             return objectMapper.readValue(metaStr, new TypeReference<Map<String, Object>>() {});
         } catch (IOException e) {
-            return new HashMap<>();
+            log.error("Failed to parse metadata string: {}", metaStr, e);
+            throw new RuntimeException("Failed to parse metadata", e);
         }
     }
 
@@ -90,7 +96,8 @@ public class DocumentController {
         try {
             return objectMapper.writeValueAsString(metaMap);
         } catch (IOException e) {
-            return "{}";
+            log.error("Failed to serialize metadata Map: {}", metaMap, e);
+            throw new RuntimeException("Failed to serialize metadata", e);
         }
     }
 

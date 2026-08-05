@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @Transactional
@@ -33,7 +35,7 @@ public class EiosIntegrationTest {
     @Autowired
     private EiosSyncService eiosSyncService;
 
-    @Autowired
+    @SpyBean
     private DefaultEiosClient eiosClient;
 
     @Autowired
@@ -48,10 +50,20 @@ public class EiosIntegrationTest {
     @Autowired
     private EiosIntegrationScheduler scheduler;
 
+    private final List<EiosExportRecord> testExportedRecords = java.util.Collections.synchronizedList(new ArrayList<>());
+
     @BeforeEach
     public void setup() {
         notificationService.clearNotifications();
         timeService.clearFixedTime();
+        testExportedRecords.clear();
+
+        // Stub sendAnalyticsExport to populate our test-local list rather than throwing configuration error
+        doAnswer(invocation -> {
+            List<EiosExportRecord> records = invocation.getArgument(0);
+            testExportedRecords.addAll(records);
+            return null;
+        }).when(eiosClient).sendAnalyticsExport(anyList());
     }
 
     @Test
@@ -156,7 +168,7 @@ public class EiosIntegrationTest {
         eiosSyncService.exportAnalytics();
 
         // Verify analytics are exported
-        List<EiosExportRecord> exported = eiosClient.getExportedRecords();
+        List<EiosExportRecord> exported = testExportedRecords;
         assertFalse(exported.isEmpty(), "Exported analytics records should not be empty");
 
         EiosExportRecord record = exported.stream()
