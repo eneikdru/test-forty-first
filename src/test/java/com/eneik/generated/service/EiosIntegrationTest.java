@@ -230,4 +230,12 @@ public class EiosIntegrationTest {
         // Verify scheduling triggering doesn't throw exceptions and invokes jobs
         assertDoesNotThrow(() -> scheduler.runEiosSyncAndExport());
     }
+
+    @Test
+    public void testDefaultEiosClientThrowsExceptionWhenUrlNotConfigured() {
+        DefaultEiosClient clientWithoutUrl = new DefaultEiosClient();
+        // Since eiosApiUrl is null, both fetchRoles and sendAnalyticsExport should throw IllegalStateException
+        assertThrows(IllegalStateException.class, () -> clientWithoutUrl.fetchRoles());
+        assertThrows(IllegalStateException.class, () -> clientWithoutUrl.sendAnalyticsExport(List.of()));
+    }
 }
