@@ -1,0 +1,15 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "block",
+      "criticalReason": "The PR introduces a hardcoded credential by explicitly checking password.equals(\"secret\") in the DocumentController login method, which is a severe security vulnerability.",
+      "concerns": [
+        {
+          "text": "JwtService uses an ephemeral key (Keys.secretKeyFor) generated at startup, which will invalidate all issued JWT tokens every time the application restarts.",
+          "severity": "medium"
+        }
+      ]
+    }
+  ]
+}
