@@ -2,6 +2,7 @@ package com.eneik.generated.service;
 
 import com.eneik.generated.model.Document;
 import com.eneik.generated.model.Role;
+import com.eneik.generated.model.EiosExportRecord;
 import com.eneik.generated.repository.RoleRepository;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -14,6 +15,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -33,6 +35,9 @@ public class WiremockIntegrationTest {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private DefaultEiosClient eiosClient;
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -117,5 +122,33 @@ public class WiremockIntegrationTest {
         Role viro = roleRepository.findByName("Virologist").orElse(null);
         assertNotNull(viro);
         assertEquals("Virus expert", viro.getDescription());
+    }
+
+    @Test
+    public void testEiosAnalyticsExportTransmission() {
+        // Stub the EIOS analytics endpoint
+        stubFor(post(urlEqualTo("/api/analytics"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        EiosExportRecord record = new EiosExportRecord(
+                "user_abc",
+                "DOWNLOAD_DOCUMENT",
+                "doc_123",
+                "DOCUMENT",
+                LocalDateTime.now(),
+                "{\"foo\":\"bar\"}"
+        );
+
+        // Run transmission
+        eiosClient.sendAnalyticsExport(List.of(record));
+
+        // Verify that the remote EIOS endpoint was called with correct payload
+        verify(postRequestedFor(urlEqualTo("/api/analytics"))
+                .withRequestBody(matchingJsonPath("$[0].userId", equalTo("user_abc")))
+                .withRequestBody(matchingJsonPath("$[0].actionType", equalTo("DOWNLOAD_DOCUMENT")))
+                .withRequestBody(matchingJsonPath("$[0].resourceId", equalTo("doc_123")))
+                .withRequestBody(matchingJsonPath("$[0].resourceType", equalTo("DOCUMENT")))
+        );
     }
 }

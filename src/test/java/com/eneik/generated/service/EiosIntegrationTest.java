@@ -3,10 +3,15 @@ package com.eneik.generated.service;
 import com.eneik.generated.model.*;
 import com.eneik.generated.repository.DocumentRepository;
 import com.eneik.generated.repository.RoleRepository;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -15,11 +20,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
 public class EiosIntegrationTest {
+
+    private static WireMockServer wireMockServer;
 
     @Autowired
     private DocumentService documentService;
@@ -48,8 +56,43 @@ public class EiosIntegrationTest {
     @Autowired
     private EiosIntegrationScheduler scheduler;
 
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        wireMockServer = new WireMockServer(0);
+        wireMockServer.start();
+        registry.add("telegram.api.url", () -> "http://localhost:" + wireMockServer.port());
+        registry.add("eios.api.url", () -> "http://localhost:" + wireMockServer.port());
+    }
+
+    @AfterAll
+    static void stopServer() {
+        if (wireMockServer != null && wireMockServer.isRunning()) {
+            wireMockServer.stop();
+        }
+    }
+
     @BeforeEach
     public void setup() {
+        WireMock.configureFor("localhost", wireMockServer.port());
+        wireMockServer.resetAll();
+
+        // Default stubs for telegram & eios to prevent unexpected failures
+        stubFor(post(urlEqualTo("/bot/sendMessage"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"ok\":true}")));
+
+        stubFor(post(urlEqualTo("/api/analytics"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
+        stubFor(get(urlEqualTo("/api/roles"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[]")));
+
         notificationService.clearNotifications();
         timeService.clearFixedTime();
     }
@@ -108,11 +151,15 @@ public class EiosIntegrationTest {
         // Clear all roles to verify sync cleanly
         roleRepository.deleteAll();
 
-        // Setup mock roles returned by the client
-        List<EiosRole> mockEiosRoles = new ArrayList<>();
-        mockEiosRoles.add(new EiosRole("Epidemiologist", "Specialist in epidemics"));
-        mockEiosRoles.add(new EiosRole("Virologist", "Virus expert"));
-        eiosClient.setMockRoles(mockEiosRoles);
+        // Setup mock roles returned by the remote client stub
+        stubFor(get(urlEqualTo("/api/roles"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[" +
+                                "  {\"name\": \"Epidemiologist\", \"description\": \"Specialist in epidemics\"}," +
+                                "  {\"name\": \"Virologist\", \"description\": \"Virus expert\"}" +
+                                "]")));
 
         // Run sync
         eiosSyncService.syncRoles();
@@ -130,7 +177,14 @@ public class EiosIntegrationTest {
         assertEquals("Virus expert", viro.getDescription());
 
         // Update a description on EIOS and re-sync
-        mockEiosRoles.get(0).setDescription("Epidemiologist with advanced clinical credentials");
+        stubFor(get(urlEqualTo("/api/roles"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[" +
+                                "  {\"name\": \"Epidemiologist\", \"description\": \"Epidemiologist with advanced clinical credentials\"}," +
+                                "  {\"name\": \"Virologist\", \"description\": \"Virus expert\"}" +
+                                "]")));
         eiosSyncService.syncRoles();
 
         Role updatedEpi = roleRepository.findByName("Epidemiologist").orElse(null);

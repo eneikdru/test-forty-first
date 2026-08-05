@@ -98,7 +98,7 @@ public class DocumentController {
             return objectMapper.writeValueAsString(metaMap);
         } catch (IOException e) {
             log.error("[DocumentController] Failed to serialize metadata map: {}", metaMap, e);
-            return "{}";
+            throw new RuntimeException("Failed to serialize metadata map", e);
         }
     }
 
