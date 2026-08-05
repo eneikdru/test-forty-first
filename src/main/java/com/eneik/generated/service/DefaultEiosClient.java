@@ -40,13 +40,17 @@ public class DefaultEiosClient implements EiosClient {
         if (eiosApiUrl == null || eiosApiUrl.trim().isEmpty()) {
             throw new IllegalStateException("EIOS API URL is not configured. Target URL must be set to prevent fake success.");
         }
-        log.info("[EiosClient] Sending EIOS analytics export to remote URL: {}", eiosApiUrl);
+        if (records == null) {
+            log.warn("[EiosClient] EIOS analytics records list is null, ignoring export.");
+            return;
+        }
+        log.info("[EiosClient] Sending {} EIOS analytics export records to remote URL: {}", records.size(), eiosApiUrl);
         try {
             restTemplate.postForObject(eiosApiUrl + "/api/analytics", records, Void.class);
-            log.info("[EiosClient] Successfully sent EIOS analytics export.");
+            log.info("[EiosClient] Successfully sent {} EIOS analytics export records.", records.size());
         } catch (Exception e) {
-            log.error("[EiosClient] Failed to send EIOS analytics export to remote URL", e);
+            log.error("[EiosClient] Failed to send EIOS analytics export to remote URL: {}", eiosApiUrl, e);
             throw new RuntimeException("Failed to send EIOS analytics export", e);
-  }
+        }
     }
 }
