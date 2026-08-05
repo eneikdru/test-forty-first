@@ -1,0 +1,14 @@
+{
+  "testsRun": 38,
+  "testsPassed": 38,
+  "testsFailed": 0,
+  "acceptanceCriteriaVerified": [
+    "Unit tests verify document formatting (PDF and DOCX content structures)",
+    "API tests verify binary endpoints (GET /api/v1/documents/{id}/export, with support for pdf/docx query parameters, specific pdf/docx download paths, and correct MIME types and HTTP statuses)",
+    "E2E tests confirm successful browser downloads (verifying download trigger, suggested filenames export.pdf/export.docx, and category restrictions on the Svelte UI with local/live proxying)",
+    "Access control verification: Student access blocked from restricted categories (edu_budget_finance, edu_staff_workload, edu_academic_reports) on export endpoints; Economist and Administrator granted full access"
+  ],
+  "coverageDeltaPercent": 5,
+  "verdict": "pass",
+  "notes": "All unit, integration, and E2E checks passed perfectly. Resolved the Tomcat Unicode character header encoding bug in Russian-localized exports."
+}

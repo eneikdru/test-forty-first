@@ -236,3 +236,32 @@ def test_student_search_financial_document_denied_and_economist_granted(page):
 
     # Verify that the budget document IS visible and accessible to Economist
     assert page.get_by_role("heading", name="Бюджетный план образовательного центра на 2026 год").is_visible()
+
+
+def test_document_export_pdf_docx(page):
+    # Now navigate and login
+    page.goto("http://localhost:3000")
+    page.wait_for_timeout(1000)
+
+    # Login as Administrator
+    page.select_option("#role", "Administrator")
+    page.get_by_role("button", name="Войти в систему").click()
+    page.wait_for_timeout(1000)
+
+    # Click on the first document to open drawer
+    page.get_by_role("button", name="Просмотреть подробности документа ФГОС ВО по специальности Эпидемиология").click()
+    page.wait_for_timeout(1000)
+
+    # Test PDF download (returns real PDF bytes generated from live backend)
+    with page.expect_download() as download_info:
+        page.get_by_role("link", name="Скачать PDF").click()
+    download = download_info.value
+    assert download.suggested_filename.endswith(".pdf")
+    assert "Эпидемиология" in download.suggested_filename
+
+    # Test DOCX download (returns real DOCX bytes generated from live backend)
+    with page.expect_download() as download_info:
+        page.get_by_role("link", name="Скачать DOCX").click()
+    download = download_info.value
+    assert download.suggested_filename.endswith(".docx")
+    assert "Эпидемиология" in download.suggested_filename

@@ -1,5 +1,6 @@
 package com.eneik.generated.controller;
 
+import java.util.UUID;
 import com.eneik.generated.model.Document;
 import com.eneik.generated.model.AuditLog;
 import com.eneik.generated.model.DocumentVersion;
@@ -209,5 +210,173 @@ public class DocumentControllerTest {
                 .andExpect(jsonPath("$[0].versionNumber").value(2))
                 .andExpect(jsonPath("$[0].versionComment").value("Update comment for GIA"))
                 .andExpect(jsonPath("$[1].versionNumber").value(1));
+    }
+
+    @Autowired
+    private com.eneik.generated.service.DocumentService documentService;
+
+    @Test
+    public void testExportPdfSuccessAndAuditLogged() throws Exception {
+        // 1. Upload a document
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "fgos_test.pdf", "application/pdf", "Mock PDF content".getBytes()
+        );
+
+        String responseStr = mockMvc.perform(multipart("/api/v1/documents")
+                        .file(file)
+                        .param("name", "ФГОС Эпидемиология")
+                        .param("description", "Учебные материалы по ФГОС")
+                        .param("doc_type", "Regulations")
+                        .param("specialty", "Epidemiology")
+                        .param("edu_level", "Residency")
+                        .param("category_id", "edu_center_root"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Map<?, ?> docObj = objectMapper.readValue(responseStr, Map.class);
+        String uuid = (String) docObj.get("id");
+
+        // Clear audit log to isolate export log check
+        auditLogRepository.deleteAll();
+
+        // 2. Perform export to PDF
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export")
+                        .param("format", "pdf")
+                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("filename=\"document.pdf\"")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("filename*=UTF-8''%D0%A4%D0%93%D0%9E%D0%A1%20%D0%AD%D0%BF%D0%B8%D0%B4%D0%B5%D0%BC%D0%B8%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%8F.pdf")))
+                .andExpect(content().bytes(documentService.exportToPdf(documentRepository.findAll().get(0))));
+
+        // 3. Verify Audit Log is recorded for export
+        List<AuditLog> logs = auditLogRepository.findAll();
+        assertEquals(1, logs.size());
+        AuditLog log = logs.get(0);
+        assertEquals("ivan.ivanov@epidem.ru", log.getUsername());
+        assertEquals("DOCUMENT_EXPORT", log.getAction());
+        assertEquals(uuid, log.getResourceId());
+    }
+
+    @Test
+    public void testExportDocxSuccess() throws Exception {
+        // 1. Upload a document
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "docx_test.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "Mock DOCX content".getBytes()
+        );
+
+        String responseStr = mockMvc.perform(multipart("/api/v1/documents")
+                        .file(file)
+                        .param("name", "Учебный план")
+                        .param("description", "Описание")
+                        .param("doc_type", "Curriculum")
+                        .param("specialty", "Other")
+                        .param("edu_level", "Residency")
+                        .param("category_id", "edu_center_root"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Map<?, ?> docObj = objectMapper.readValue(responseStr, Map.class);
+        String uuid = (String) docObj.get("id");
+
+        // 2. Perform export to DOCX
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export")
+                        .param("format", "docx")
+                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("filename=\"document.docx\"")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("filename*=UTF-8''%D0%A3%D1%87%D0%B5%D0%B1%D0%BD%D1%8B%D0%B9%20%D0%BF%D0%BB%D0%B0%D0%BD.docx")));
+    }
+
+    @Test
+    public void testExportAccessRestrictions() throws Exception {
+        // 1. Upload a financial document (edu_budget_finance)
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "budget.pdf", "application/pdf", "Budget content".getBytes()
+        );
+
+        String responseStr = mockMvc.perform(multipart("/api/v1/documents")
+                        .file(file)
+                        .param("name", "Финансовый отчет")
+                        .param("description", "Бюджетный план")
+                        .param("doc_type", "Regulations")
+                        .param("specialty", "Other")
+                        .param("edu_level", "Residency")
+                        .param("category_id", "edu_budget_finance"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Map<?, ?> docObj = objectMapper.readValue(responseStr, Map.class);
+        String uuid = (String) docObj.get("id");
+
+        // 2. Export by Student -> Forbidden (403)
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export")
+                        .param("format", "pdf")
+                        .header("Authorization", "Bearer student.petrov@epidem.ru"))
+                .andExpect(status().isForbidden());
+
+        // 3. Export by Economist -> Allowed (200)
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export")
+                        .param("format", "pdf")
+                        .header("Authorization", "Bearer economist.ivanov@epidem.ru"))
+                .andExpect(status().isOk());
+
+        // 4. Export by Administrator -> Allowed (200)
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export")
+                        .param("format", "pdf")
+                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testExportInvalidFormatAndNotFound() throws Exception {
+        // Try invalid format
+        mockMvc.perform(get("/api/v1/documents/non-existent-uuid/export")
+                        .param("format", "invalid_format")
+                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                .andExpect(status().isBadRequest());
+
+        // Try valid format but non-existent document
+        String nonExistentUuid = UUID.randomUUID().toString();
+        mockMvc.perform(get("/api/v1/documents/" + nonExistentUuid + "/export")
+                        .param("format", "pdf")
+                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testExportSpecificEndpoints() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "fgos_test.pdf", "application/pdf", "Mock PDF content".getBytes()
+        );
+
+        String responseStr = mockMvc.perform(multipart("/api/v1/documents")
+                        .file(file)
+                        .param("name", "ФГОС")
+                        .param("description", "Учебные материалы по ФГОС")
+                        .param("doc_type", "Regulations")
+                        .param("specialty", "Epidemiology")
+                        .param("edu_level", "Residency")
+                        .param("category_id", "edu_center_root"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Map<?, ?> docObj = objectMapper.readValue(responseStr, Map.class);
+        String uuid = (String) docObj.get("id");
+
+        // Test specific PDF endpoint
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export/pdf")
+                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"));
+
+        // Test specific DOCX endpoint
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export/docx")
+                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
     }
 }
