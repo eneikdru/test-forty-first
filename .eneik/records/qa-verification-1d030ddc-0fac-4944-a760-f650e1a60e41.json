@@ -1,0 +1,12 @@
+{
+  "testsRun": 47,
+  "testsPassed": 47,
+  "testsFailed": 0,
+  "acceptanceCriteriaVerified": [
+    "Unit tests mock the HTTP client (RestTemplate) for EiosClient, verifying fetchRoles and sendAnalyticsExport payloads and exceptions",
+    "Integration tests verify that correct payload format is sent to the configured EIOS API via WireMock"
+  ],
+  "coverageDeltaPercent": null,
+  "verdict": "pass",
+  "notes": "Added comprehensive Mockito unit tests in DefaultEiosClientTest verifying HTTP client calls, payloads, exceptions, and configuration validation. Cleanly ran and passed all 47 project tests."
+}
