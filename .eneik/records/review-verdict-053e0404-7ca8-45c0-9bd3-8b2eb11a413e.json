@@ -1,0 +1,19 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        {
+          "text": "Throwing a raw RuntimeException upon metadata parse/serialize failure in DocumentController may cause unhandled 500 responses without structured error responses for the client.",
+          "severity": "low"
+        },
+        {
+          "text": "In DefaultEiosClient, throwing a generic RuntimeException when restTemplate fails doesn't distinguish between connection timeouts, 4xx client errors, or 5xx server errors, which could make upstream error handling or retries harder to implement.",
+          "severity": "low"
+        }
+      ]
+    }
+  ]
+}
