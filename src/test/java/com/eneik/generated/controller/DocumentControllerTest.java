@@ -210,4 +210,76 @@ public class DocumentControllerTest {
                 .andExpect(jsonPath("$[0].versionComment").value("Update comment for GIA"))
                 .andExpect(jsonPath("$[1].versionNumber").value(1));
     }
+
+    @Test
+    public void testCommentsEndpoints() throws Exception {
+        // 1. Upload initial document V1
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "v1.pdf", "application/pdf", "V1 Data".getBytes()
+        );
+
+        String responseStr = mockMvc.perform(multipart("/api/v1/documents")
+                        .file(file)
+                        .param("name", "ФГОС Эпидемиология")
+                        .param("description", "Учебные материалы по ФГОС")
+                        .param("doc_type", "Regulations")
+                        .param("specialty", "Epidemiology")
+                        .param("edu_level", "Residency")
+                        .param("category_id", "edu_center_root"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Map<?, ?> docObj = objectMapper.readValue(responseStr, Map.class);
+        String uuid = (String) docObj.get("id");
+
+        // 2. Post a comment
+        String commentBody = "{\"text\": \"This is a test comment on the document\"}";
+        mockMvc.perform(post("/api/v1/documents/" + uuid + "/comments")
+                        .contentType("application/json")
+                        .content(commentBody)
+                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.text").value("This is a test comment on the document"))
+                .andExpect(jsonPath("$.user.username").value("ivan.ivanov@epidem.ru"))
+                .andExpect(jsonPath("$.user.fullName").value("Иванов Иван Иванович"));
+
+        // 3. Get comments
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/comments"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].text").value("This is a test comment on the document"));
+    }
+
+    @Test
+    public void testActualizationRequestEndpoint() throws Exception {
+        // 1. Upload initial document V1
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "v1.pdf", "application/pdf", "V1 Data".getBytes()
+        );
+
+        String responseStr = mockMvc.perform(multipart("/api/v1/documents")
+                        .file(file)
+                        .param("name", "ФГОС Эпидемиология")
+                        .param("description", "Учебные материалы по ФГОС")
+                        .param("doc_type", "Regulations")
+                        .param("specialty", "Epidemiology")
+                        .param("edu_level", "Residency")
+                        .param("category_id", "edu_center_root"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Map<?, ?> docObj = objectMapper.readValue(responseStr, Map.class);
+        String uuid = (String) docObj.get("id");
+
+        // 2. Post an actualization request
+        String requestBody = "{\"reason\": \"The document needs to be updated because of new regulations.\"}";
+        mockMvc.perform(post("/api/v1/documents/" + uuid + "/actualization-request")
+                        .contentType("application/json")
+                        .content(requestBody)
+                        .header("Authorization", "Bearer sergey.smirnov@epidem.ru"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.reason").value("The document needs to be updated because of new regulations."))
+                .andExpect(jsonPath("$.requester.username").value("sergey.smirnov@epidem.ru"))
+                .andExpect(jsonPath("$.status").value("PENDING"));
+    }
 }

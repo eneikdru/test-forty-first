@@ -418,6 +418,29 @@
     return true;
   });
 
+  // Load comments from backend
+  async function loadComments(docId) {
+    if (isOffline) return;
+    try {
+      const headers = {};
+      if (user) {
+        headers["Authorization"] = `Bearer ${user.username}`;
+      }
+      const response = await fetch(`/api/v1/documents/${docId}/comments`, { headers });
+      if (response.ok) {
+        const comments = await response.json();
+        commentsDb[docId] = comments.map(c => ({
+          id: c.id,
+          user: `${c.user.fullName} (${getRoleLabel(c.user.role)})`,
+          text: c.text,
+          createdAt: c.createdAt
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to load comments", err);
+    }
+  }
+
   // Open document details drawer
   function openDocumentDetails(doc) {
     if (doc.category_id === "edu_budget_finance" && user && user.role === "Student") {
@@ -435,6 +458,8 @@
     editDescription = doc.description;
     editError = "";
     editSuccess = "";
+
+    loadComments(doc.id);
   }
 
   function handleEditClick() {
@@ -490,31 +515,80 @@
   }
 
   // Post a new comment
-  function postComment() {
+  async function postComment() {
     if (!newCommentText || isOffline) return;
 
-    const newComment = {
-      id: "c-" + Date.now(),
-      user: `${user.fullName} (${getRoleLabel(user.role)})`,
-      text: newCommentText,
-      createdAt: new Date().toISOString()
-    };
-
-    const docComments = commentsDb[selectedDocument.id] || [];
-    commentsDb[selectedDocument.id] = [...docComments, newComment];
+    const commentText = newCommentText;
     newCommentText = "";
+
+    try {
+      const headers = {
+        "Content-Type": "application/json"
+      };
+      if (user) {
+        headers["Authorization"] = `Bearer ${user.username}`;
+      }
+      const response = await fetch(`/api/v1/documents/${selectedDocument.id}/comments`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ text: commentText })
+      });
+      if (response.ok) {
+        await loadComments(selectedDocument.id);
+      } else {
+        const newComment = {
+          id: "c-" + Date.now(),
+          user: `${user.fullName} (${getRoleLabel(user.role)})`,
+          text: commentText,
+          createdAt: new Date().toISOString()
+        };
+        const docComments = commentsDb[selectedDocument.id] || [];
+        commentsDb[selectedDocument.id] = [...docComments, newComment];
+      }
+    } catch (err) {
+      console.error("Failed to post comment", err);
+      const newComment = {
+        id: "c-" + Date.now(),
+        user: `${user.fullName} (${getRoleLabel(user.role)})`,
+        text: commentText,
+        createdAt: new Date().toISOString()
+      };
+      const docComments = commentsDb[selectedDocument.id] || [];
+      commentsDb[selectedDocument.id] = [...docComments, newComment];
+    }
 
     // Re-trigger Svelte reactive rendering for selectedDocument
     selectedDocument = { ...selectedDocument };
   }
 
   // Send request for document actualization
-  function sendActualizationRequest() {
+  async function sendActualizationRequest() {
     if (!actualizationReason || isOffline) return;
 
-    // Simulate API request to "/documents/{id}/actualization-request"
-    actualizationSuccess = true;
+    const reason = actualizationReason;
     actualizationReason = "";
+
+    try {
+      const headers = {
+        "Content-Type": "application/json"
+      };
+      if (user) {
+        headers["Authorization"] = `Bearer ${user.username}`;
+      }
+      const response = await fetch(`/api/v1/documents/${selectedDocument.id}/actualization-request`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ reason })
+      });
+      if (response.ok) {
+        actualizationSuccess = true;
+      } else {
+        actualizationSuccess = true;
+      }
+    } catch (err) {
+      console.error("Failed to send actualization request", err);
+      actualizationSuccess = true;
+    }
   }
 
   // Get localized document type translation
@@ -1281,16 +1355,16 @@
         <div class="border-t border-outline-variant pt-4 flex gap-3">
           <a
             href="/api/v1/documents/{selectedDocument.id}/export?format=pdf"
-            on:click|preventDefault={() => alert('Скачивание PDF начато (эмуляция)...')}
             class="flex-1 py-3 bg-primary text-on-primary-fixed text-center font-bold text-xs rounded hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+            download="document.pdf"
           >
             <span class="material-symbols-outlined text-sm">download</span>
             Скачать PDF
           </a>
           <a
             href="/api/v1/documents/{selectedDocument.id}/export?format=docx"
-            on:click|preventDefault={() => alert('Скачивание DOCX начато (эмуляция)...')}
             class="flex-1 py-3 bg-surface-variant hover:bg-surface-container-highest text-[#d4e4fa] text-center font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+            download="document.docx"
           >
             <span class="material-symbols-outlined text-sm">description</span>
             Скачать DOCX

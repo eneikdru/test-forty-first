@@ -6,6 +6,8 @@ import com.eneik.generated.model.AuditLog;
 import com.eneik.generated.repository.DocumentRepository;
 import com.eneik.generated.repository.DocumentVersionRepository;
 import com.eneik.generated.repository.AuditLogRepository;
+import com.eneik.generated.repository.CommentRepository;
+import com.eneik.generated.repository.ActualizationRequestRepository;
 import com.eneik.generated.service.DocumentService;
 import com.eneik.generated.service.FileStorageService;
 
@@ -47,19 +49,25 @@ public class DocumentController {
     private final DocumentService documentService;
     private final FileStorageService fileStorageService;
     private final ObjectMapper objectMapper;
+    private final CommentRepository commentRepository;
+    private final ActualizationRequestRepository actualizationRequestRepository;
 
     public DocumentController(DocumentRepository documentRepository,
                               DocumentVersionRepository documentVersionRepository,
                               AuditLogRepository auditLogRepository,
                               DocumentService documentService,
                               FileStorageService fileStorageService,
-                              ObjectMapper objectMapper) {
+                              ObjectMapper objectMapper,
+                              CommentRepository commentRepository,
+                              ActualizationRequestRepository actualizationRequestRepository) {
         this.documentRepository = documentRepository;
         this.documentVersionRepository = documentVersionRepository;
         this.auditLogRepository = auditLogRepository;
         this.documentService = documentService;
         this.fileStorageService = fileStorageService;
         this.objectMapper = objectMapper;
+        this.commentRepository = commentRepository;
+        this.actualizationRequestRepository = actualizationRequestRepository;
     }
 
     private String longToUuidString(Long id) {
@@ -585,5 +593,226 @@ public class DocumentController {
         response.put("totalElements", totalElements);
 
         return ResponseEntity.ok(response);
+    }
+
+    // Helper to resolve user from Bearer Token
+    private Map<String, String> getUserInfoFromAuth(String authHeader) {
+        String username = DEFAULT_USERNAME;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            username = authHeader.substring(7);
+        }
+
+        String userId = DEFAULT_USER_ID;
+        String fullName = MOCKED_FULL_NAME_IVAN;
+        String role = DEFAULT_ROLE;
+
+        if (username.contains("economist")) {
+            userId = "ca078170-df17-48f8-bca4-d89000a6e87a";
+            fullName = "Иванов Экономист Экономистович";
+            role = "Economist";
+        } else if (username.contains("elena")) {
+            userId = "ca078170-df17-48f8-bca4-d89000a6e87b";
+            fullName = "Петрова Елена Петровна";
+            role = "Content-manager";
+        } else if (username.contains("sergey")) {
+            userId = "ca078170-df17-48f8-bca4-d89000a6e87c";
+            fullName = "Смирнов Сергей Сергеевич";
+            role = "Teacher";
+        } else if (username.contains("student")) {
+            userId = "ca078170-df17-48f8-bca4-d89000a6e87d";
+            fullName = "Ординатор Студент Студентович";
+            role = "Student";
+        } else if (username.contains("ivan")) {
+            userId = DEFAULT_USER_ID;
+            fullName = MOCKED_FULL_NAME_IVAN;
+            role = DEFAULT_ROLE;
+        } else {
+            userId = UUID.nameUUIDFromBytes(username.getBytes()).toString();
+            fullName = username.split("@")[0];
+            role = DEFAULT_ROLE;
+        }
+
+        Map<String, String> info = new HashMap<>();
+        info.put("userId", userId);
+        info.put("username", username);
+        info.put("fullName", fullName);
+        info.put("role", role);
+        return info;
+    }
+
+    // 1. GET /documents/{id}/comments
+    @GetMapping("/documents/{id}/comments")
+    public ResponseEntity<?> getComments(@PathVariable String id) {
+        Long docId = uuidStringToLong(id);
+        if (docId == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        Optional<Document> docOpt = documentRepository.findById(docId);
+        if (docOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        List<com.eneik.generated.model.Comment> comments = commentRepository.findByDocumentId(docId);
+        List<Map<String, Object>> response = comments.stream().map(comment -> {
+            Map<String, Object> userMap = new LinkedHashMap<>();
+            userMap.put("id", comment.getUserId());
+            userMap.put("username", comment.getUsername());
+            userMap.put("fullName", comment.getFullName());
+            userMap.put("role", comment.getUserRole());
+
+            Map<String, Object> commentMap = new LinkedHashMap<>();
+            commentMap.put("id", longToUuidString(comment.getId()));
+            commentMap.put("documentId", id);
+            commentMap.put("text", comment.getText());
+
+            LocalDateTime created = comment.getCreatedAt();
+            if (created == null) {
+                created = LocalDateTime.now();
+            }
+            commentMap.put("createdAt", created.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+            commentMap.put("user", userMap);
+            return commentMap;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    // 2. POST /documents/{id}/comments
+    @PostMapping("/documents/{id}/comments")
+    public ResponseEntity<?> postComment(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        Long docId = uuidStringToLong(id);
+        if (docId == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        Optional<Document> docOpt = documentRepository.findById(docId);
+        if (docOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        String text = body.get("text");
+        if (text == null || text.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Comment text is required"));
+        }
+
+        Map<String, String> userInfo = getUserInfoFromAuth(authHeader);
+        com.eneik.generated.model.Comment comment = new com.eneik.generated.model.Comment(
+                docOpt.get(),
+                userInfo.get("userId"),
+                userInfo.get("username"),
+                userInfo.get("fullName"),
+                userInfo.get("role"),
+                text
+        );
+
+        comment = commentRepository.save(comment);
+
+        Map<String, Object> userMap = new LinkedHashMap<>();
+        userMap.put("id", comment.getUserId());
+        userMap.put("username", comment.getUsername());
+        userMap.put("fullName", comment.getFullName());
+        userMap.put("role", comment.getUserRole());
+
+        Map<String, Object> commentMap = new LinkedHashMap<>();
+        commentMap.put("id", longToUuidString(comment.getId()));
+        commentMap.put("documentId", id);
+        commentMap.put("text", comment.getText());
+        commentMap.put("createdAt", LocalDateTime.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+        commentMap.put("user", userMap);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(commentMap);
+    }
+
+    // 3. POST /documents/{id}/actualization-request
+    @PostMapping("/documents/{id}/actualization-request")
+    public ResponseEntity<?> postActualizationRequest(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        Long docId = uuidStringToLong(id);
+        if (docId == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        Optional<Document> docOpt = documentRepository.findById(docId);
+        if (docOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        String reason = body.get("reason");
+        if (reason == null || reason.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Actualization reason is required"));
+        }
+
+        Map<String, String> userInfo = getUserInfoFromAuth(authHeader);
+        com.eneik.generated.model.ActualizationRequest request = new com.eneik.generated.model.ActualizationRequest(
+                docOpt.get(),
+                userInfo.get("userId"),
+                userInfo.get("username"),
+                userInfo.get("fullName"),
+                userInfo.get("role"),
+                reason,
+                "PENDING"
+        );
+
+        request = actualizationRequestRepository.save(request);
+
+        Map<String, Object> requesterMap = new LinkedHashMap<>();
+        requesterMap.put("id", request.getRequesterId());
+        requesterMap.put("username", request.getRequesterUsername());
+        requesterMap.put("fullName", request.getRequesterFullName());
+        requesterMap.put("role", request.getRequesterRole());
+
+        Map<String, Object> requestMap = new LinkedHashMap<>();
+        requestMap.put("requestId", longToUuidString(request.getId()));
+        requestMap.put("documentId", id);
+        requestMap.put("requester", requesterMap);
+        requestMap.put("reason", request.getReason());
+        requestMap.put("status", request.getStatus());
+        requestMap.put("createdAt", LocalDateTime.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(requestMap);
+    }
+
+    // 4. GET /documents/{id}/export (and formats)
+    @GetMapping("/documents/{id}/export")
+    public ResponseEntity<byte[]> exportDocument(
+            @PathVariable String id,
+            @RequestParam String format) {
+
+        Long docId = uuidStringToLong(id);
+        if (docId == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        Optional<Document> docOpt = documentRepository.findById(docId);
+        if (docOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        byte[] content = ("Mock export file content for document: " + docOpt.get().getTitle()).getBytes();
+        String filename = "document." + format.toLowerCase();
+        String contentType = "application/octet-stream";
+        if ("pdf".equalsIgnoreCase(format)) {
+            contentType = "application/pdf";
+        } else if ("docx".equalsIgnoreCase(format)) {
+            contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        }
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .header("Content-Type", contentType)
+                .body(content);
     }
 }
