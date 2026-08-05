@@ -1,0 +1,19 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        {
+          "text": "Throwing raw RuntimeException when serializing or parsing metadata in DocumentController.java can cause unhandled HTTP 500 responses without structured error diagnostics for the API client.",
+          "severity": "low"
+        },
+        {
+          "text": "The restTemplate call in DefaultEiosClient.java uses default timeouts, which might lead to threads blocking indefinitely in case of slow or unresponsive external EIOS APIs.",
+          "severity": "low"
+        }
+      ]
+    }
+  ]
+}
