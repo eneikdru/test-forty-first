@@ -210,4 +210,89 @@ public class DocumentControllerTest {
                 .andExpect(jsonPath("$[0].versionComment").value("Update comment for GIA"))
                 .andExpect(jsonPath("$[1].versionNumber").value(1));
     }
+
+    @Test
+    public void testExportDocumentPdfAndDocxSuccess() throws Exception {
+        // 1. Upload a document to edu_scholarships
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "stipend.pdf", "application/pdf", "Stipend info".getBytes()
+        );
+
+        String responseStr = mockMvc.perform(multipart("/api/v1/documents")
+                        .file(file)
+                        .param("name", "Стипендии 2026")
+                        .param("description", "Правила выплат стипендий ординаторам")
+                        .param("doc_type", "Regulations")
+                        .param("specialty", "Epidemiology")
+                        .param("edu_level", "Residency")
+                        .param("category_id", "edu_scholarships"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Map<?, ?> docObj = objectMapper.readValue(responseStr, Map.class);
+        String uuid = (String) docObj.get("id");
+
+        // 2. Export to PDF with a Student role
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export")
+                        .param("format", "pdf")
+                        .header("Authorization", "Bearer student.petrov@epidem.ru:Student"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("document_" + uuid + ".pdf")));
+
+        // 3. Export to DOCX with a Teacher role
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export/docx")
+                        .header("Authorization", "Bearer teacher.ivanov@epidem.ru:Teacher"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("wordprocessingml")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("document_" + uuid + ".docx")));
+
+        // 4. Verify Audit Logs for DOCUMENT_EXPORT
+        List<AuditLog> logs = auditLogRepository.findAll().stream()
+                .filter(l -> l.getAction().equals("DOCUMENT_EXPORT"))
+                .collect(java.util.stream.Collectors.toList());
+        assertFalse(logs.isEmpty());
+        assertTrue(logs.stream().anyMatch(l -> l.getUsername().equals("student.petrov@epidem.ru")));
+        assertTrue(logs.stream().anyMatch(l -> l.getUsername().equals("teacher.ivanov@epidem.ru")));
+    }
+
+    @Test
+    public void testExportDocumentForbiddenCategory() throws Exception {
+        // 1. Upload a budget/finance document (edu_budget_finance)
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "budget.pdf", "application/pdf", "Confidential Budget".getBytes()
+        );
+
+        String responseStr = mockMvc.perform(multipart("/api/v1/documents")
+                        .file(file)
+                        .param("name", "Секретный Бюджет 2026")
+                        .param("description", "Планирование бюджета на следующий год")
+                        .param("doc_type", "Regulations")
+                        .param("specialty", "Other")
+                        .param("edu_level", "Residency")
+                        .param("category_id", "edu_budget_finance"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Map<?, ?> docObj = objectMapper.readValue(responseStr, Map.class);
+        String uuid = (String) docObj.get("id");
+
+        // 2. Export with Student role -> 403 Forbidden
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export/pdf")
+                        .header("Authorization", "Bearer student.petrov@epidem.ru:Student"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("FORBIDDEN"));
+
+        // 3. Export with Content Manager role -> 403 Forbidden
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export?format=docx")
+                        .header("Authorization", "Bearer manager.smirnov@epidem.ru:Content-manager"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("FORBIDDEN"));
+
+        // 4. Export with Administrator role -> 200 OK
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/export/pdf")
+                        .header("Authorization", "Bearer admin.boss@epidem.ru:Administrator"))
+                .andExpect(status().isOk());
+    }
 }

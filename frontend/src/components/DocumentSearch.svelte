@@ -162,37 +162,6 @@
   };
 
   onMount(() => {
-    // Check local storage for documents
-    const savedDocs = localStorage.getItem("lexicon_documents");
-    if (savedDocs) {
-      documents = JSON.parse(savedDocs);
-      // Ensure budget document is seeded if not present
-      if (!documents.some(d => d.id === "e5bf923d-4c5a-4fdf-91bf-a3c309503a4b")) {
-        documents = [
-          {
-            id: "e5bf923d-4c5a-4fdf-91bf-a3c309503a4b",
-            name: "Бюджетный план образовательного центра на 2026 год",
-            description: "Смета расходов и финансовое планирование образовательного центра ФБУН ЦНИИ Эпидемиологии.",
-            doc_type: "Regulations",
-            specialty: "Other",
-            edu_level: "Residency",
-            category_id: "edu_budget_finance",
-            tags: ["бюджет", "финансы", "нормативные акты"],
-            version: 1,
-            fileSize: 350000,
-            fileType: "application/pdf",
-            updatedAt: "2026-08-01T10:00:00Z",
-            updatedBy: "economist.ivanov@epidem.ru"
-          },
-          ...documents
-        ];
-        localStorage.setItem("lexicon_documents", JSON.stringify(documents));
-      }
-    } else {
-      documents = SEED_DOCUMENTS;
-      localStorage.setItem("lexicon_documents", JSON.stringify(SEED_DOCUMENTS));
-    }
-
     // Check favorites
     const savedFavs = localStorage.getItem("lexicon_favorites");
     if (savedFavs) {
@@ -216,6 +185,17 @@
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    if (user) {
+      loadDocuments();
+    } else {
+      const savedDocs = localStorage.getItem("lexicon_documents");
+      if (savedDocs) {
+        documents = JSON.parse(savedDocs);
+      } else {
+        documents = SEED_DOCUMENTS;
+      }
+    }
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -224,6 +204,7 @@
 
   function handleOnline() {
     isOffline = false;
+    if (user) loadDocuments();
   }
 
   function handleOffline() {
@@ -240,9 +221,11 @@
   }
 
   // Handle Login authentication
-  function handleLogin(e) {
+  async function handleLogin(e) {
     e.preventDefault();
     categoryError = "";
+    loginError = "";
+
     if (!loginUsername) {
       loginError = "Введите имя пользователя или корпоративный email";
       return;
@@ -252,17 +235,135 @@
       return;
     }
 
-    // Create a mock user
-    const loggedUser = {
-      username: loginUsername,
-      role: loginRole,
-      fullName: loginUsername.includes("ivan") ? "Иванов Иван Иванович" : "Петров Петр Петрович"
-    };
+    try {
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: loginUsername,
+          password: loginPassword,
+          role: loginRole
+        })
+      });
 
-    user = loggedUser;
-    localStorage.setItem("lexicon_user", JSON.stringify(loggedUser));
-    loginError = "";
-    selectedCategory = ""; // Reset category filter on login
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        loginError = errorData.message || "Неверные учетные данные";
+        return;
+      }
+
+      const data = await res.json();
+      user = data.user;
+      localStorage.setItem("lexicon_user", JSON.stringify(user));
+      selectedCategory = "";
+      await loadDocuments();
+    } catch (err) {
+      console.error(err);
+      loginError = "Сетевая ошибка при авторизации";
+    }
+  }
+
+  async function loadDocuments() {
+    if (isOffline) {
+      const savedDocs = localStorage.getItem("lexicon_documents");
+      if (savedDocs) {
+        documents = JSON.parse(savedDocs);
+      } else {
+        documents = SEED_DOCUMENTS;
+      }
+      return;
+    }
+
+    try {
+      const token = user ? `${user.username}:${user.role}` : loginUsername + ":" + loginRole;
+      const res = await fetch('/api/v1/documents', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        documents = data.content.map(doc => ({
+          id: doc.id,
+          name: doc.name,
+          description: doc.description,
+          doc_type: doc.doc_type,
+          specialty: doc.specialty,
+          edu_level: doc.edu_level,
+          category_id: doc.category_id,
+          tags: doc.tags || [],
+          version: doc.version,
+          fileSize: doc.fileSize,
+          fileType: doc.fileType,
+          updatedAt: doc.updatedAt,
+          updatedBy: doc.updatedBy
+        }));
+        localStorage.setItem("lexicon_documents", JSON.stringify(documents));
+      }
+    } catch (err) {
+      console.error('Ошибка при загрузке документов', err);
+      const savedDocs = localStorage.getItem("lexicon_documents");
+      if (savedDocs) {
+        documents = JSON.parse(savedDocs);
+      }
+    }
+  }
+
+  async function loadComments(docId) {
+    try {
+      const token = user ? `${user.username}:${user.role}` : loginUsername + ":" + loginRole;
+      const res = await fetch(`/api/v1/documents/${docId}/comments`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const comments = await res.json();
+        commentsDb[docId] = comments.map(c => ({
+          id: c.id,
+          user: `${c.user.fullName} (${getRoleLabel(c.user.role)})`,
+          text: c.text,
+          createdAt: c.createdAt
+        }));
+        commentsDb = { ...commentsDb };
+      }
+    } catch (err) {
+      console.error('Ошибка при загрузке комментариев', err);
+    }
+  }
+
+  async function downloadDocument(format) {
+    if (!selectedDocument || isOffline) return;
+
+    try {
+      const token = user ? `${user.username}:${user.role}` : loginUsername + ":" + loginRole;
+      const res = await fetch(`/api/v1/documents/${selectedDocument.id}/export?format=${format}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Ошибка скачивания: ${errorData.message || res.statusText || 'Неизвестная ошибка'}`);
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `document_${selectedDocument.id}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert('Произошла сетевая ошибка при скачивании документа');
+    }
   }
 
   // Handle Logout
@@ -435,6 +536,7 @@
     editDescription = doc.description;
     editError = "";
     editSuccess = "";
+    loadComments(doc.id);
   }
 
   function handleEditClick() {
@@ -490,31 +592,61 @@
   }
 
   // Post a new comment
-  function postComment() {
+  async function postComment() {
     if (!newCommentText || isOffline) return;
 
-    const newComment = {
-      id: "c-" + Date.now(),
-      user: `${user.fullName} (${getRoleLabel(user.role)})`,
-      text: newCommentText,
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const token = user ? `${user.username}:${user.role}` : loginUsername + ":" + loginRole;
+      const res = await fetch(`/api/v1/documents/${selectedDocument.id}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ text: newCommentText })
+      });
 
-    const docComments = commentsDb[selectedDocument.id] || [];
-    commentsDb[selectedDocument.id] = [...docComments, newComment];
-    newCommentText = "";
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Ошибка отправки комментария: ${errorData.message || res.statusText}`);
+        return;
+      }
 
-    // Re-trigger Svelte reactive rendering for selectedDocument
-    selectedDocument = { ...selectedDocument };
+      newCommentText = "";
+      await loadComments(selectedDocument.id);
+    } catch (err) {
+      console.error(err);
+      alert('Сетевая ошибка при отправке комментария');
+    }
   }
 
   // Send request for document actualization
-  function sendActualizationRequest() {
+  async function sendActualizationRequest() {
     if (!actualizationReason || isOffline) return;
 
-    // Simulate API request to "/documents/{id}/actualization-request"
-    actualizationSuccess = true;
-    actualizationReason = "";
+    try {
+      const token = user ? `${user.username}:${user.role}` : loginUsername + ":" + loginRole;
+      const res = await fetch(`/api/v1/documents/${selectedDocument.id}/actualization-request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason: actualizationReason })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Ошибка отправки запроса: ${errorData.message || res.statusText}`);
+        return;
+      }
+
+      actualizationSuccess = true;
+      actualizationReason = "";
+    } catch (err) {
+      console.error(err);
+      alert('Сетевая ошибка при отправке запроса на актуализацию');
+    }
   }
 
   // Get localized document type translation
@@ -1279,22 +1411,20 @@
 
         <!-- Document Download Footer -->
         <div class="border-t border-outline-variant pt-4 flex gap-3">
-          <a
-            href="/api/v1/documents/{selectedDocument.id}/export?format=pdf"
-            on:click|preventDefault={() => alert('Скачивание PDF начато (эмуляция)...')}
+          <button
+            on:click={() => downloadDocument('pdf')}
             class="flex-1 py-3 bg-primary text-on-primary-fixed text-center font-bold text-xs rounded hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
           >
             <span class="material-symbols-outlined text-sm">download</span>
             Скачать PDF
-          </a>
-          <a
-            href="/api/v1/documents/{selectedDocument.id}/export?format=docx"
-            on:click|preventDefault={() => alert('Скачивание DOCX начато (эмуляция)...')}
+          </button>
+          <button
+            on:click={() => downloadDocument('docx')}
             class="flex-1 py-3 bg-surface-variant hover:bg-surface-container-highest text-[#d4e4fa] text-center font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 min-h-[44px]"
           >
             <span class="material-symbols-outlined text-sm">description</span>
             Скачать DOCX
-          </a>
+          </button>
         </div>
 
       </div>

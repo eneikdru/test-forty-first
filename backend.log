@@ -1,0 +1,97 @@
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ----------------< com.eneik.generated:test-forty-first >----------------
+[INFO] Building test-forty-first 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] >>> spring-boot:3.3.2:run (default-cli) > test-compile @ test-forty-first >>>
+[INFO]
+[INFO] --- resources:3.3.1:resources (default-resources) @ test-forty-first ---
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] Copying 8 resources from src/main/resources to target/classes
+[INFO]
+[INFO] --- compiler:3.13.0:compile (default-compile) @ test-forty-first ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO]
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ test-forty-first ---
+[INFO] Copying 0 resource from src/test/resources to target/test-classes
+[INFO]
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ test-forty-first ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO]
+[INFO] <<< spring-boot:3.3.2:run (default-cli) < test-compile @ test-forty-first <<<
+[INFO]
+[INFO]
+[INFO] --- spring-boot:3.3.2:run (default-cli) @ test-forty-first ---
+[INFO] Attaching agents: []
+Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.2)
+
+2026-08-05T02:23:27.172Z  INFO 219923 --- [app] [           main] com.eneik.generated.Application          : Starting Application using Java 21.0.10 with PID 219923 (/app/target/classes started by jules in /app)
+2026-08-05T02:23:27.176Z  INFO 219923 --- [app] [           main] com.eneik.generated.Application          : No active profile set, falling back to 1 default profile: "default"
+2026-08-05T02:23:28.101Z  INFO 219923 --- [app] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-08-05T02:23:28.218Z  INFO 219923 --- [app] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 106 ms. Found 9 JPA repository interfaces.
+2026-08-05T02:23:29.123Z  INFO 219923 --- [app] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-08-05T02:23:29.144Z  INFO 219923 --- [app] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-08-05T02:23:29.144Z  INFO 219923 --- [app] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.26]
+2026-08-05T02:23:29.219Z  INFO 219923 --- [app] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-08-05T02:23:29.221Z  INFO 219923 --- [app] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1979 ms
+Standard Commons Logging discovery in action with spring-jcl: please remove commons-logging.jar from classpath in order to avoid potential conflicts
+2026-08-05T02:23:29.574Z  INFO 219923 --- [app] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-08-05T02:23:29.961Z  INFO 219923 --- [app] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn1: url=jdbc:h2:file:./data/appdb user=
+2026-08-05T02:23:29.963Z  INFO 219923 --- [app] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-08-05T02:23:29.987Z  INFO 219923 --- [app] [           main] o.f.c.i.resource.ResourceNameValidator   : 1 SQL migrations were detected but not run because they did not follow the filename convention.
+2026-08-05T02:23:29.987Z  INFO 219923 --- [app] [           main] o.f.c.i.resource.ResourceNameValidator   : Set 'validateMigrationNaming' to true to fail fast and see a list of the invalid file names.
+2026-08-05T02:23:30.025Z  INFO 219923 --- [app] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:h2:file:./data/appdb (H2 2.2)
+2026-08-05T02:23:30.039Z  WARN 219923 --- [app] [           main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: H2 2.2.224 is newer than this version of Flyway and support has not been tested. The latest supported version of H2 is 2.2.220.
+2026-08-05T02:23:30.073Z  INFO 219923 --- [app] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "PUBLIC"."flyway_schema_history" does not exist yet
+2026-08-05T02:23:30.078Z  INFO 219923 --- [app] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 7 migrations (execution time 00:00.024s)
+2026-08-05T02:23:30.098Z  INFO 219923 --- [app] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "PUBLIC"."flyway_schema_history" ...
+2026-08-05T02:23:30.171Z  INFO 219923 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "PUBLIC": << Empty Schema >>
+2026-08-05T02:23:30.172Z  WARN 219923 --- [app] [           main] o.f.core.internal.command.DbMigrate      : outOfOrder mode is active. Migration of schema "PUBLIC" may not be reproducible.
+2026-08-05T02:23:30.204Z  INFO 219923 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "20260803022641879 - init"
+2026-08-05T02:23:30.248Z  INFO 219923 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "20260803022643107 - create audit logs"
+2026-08-05T02:23:30.261Z  INFO 219923 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "20260803023320490 - lms links and analytics"
+2026-08-05T02:23:30.277Z  INFO 219923 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "20260803023320809 - moodle financial extensions"
+2026-08-05T02:23:30.292Z  INFO 219923 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "20260803174723538 - create deliverables"
+2026-08-05T02:23:30.301Z  INFO 219923 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "20260803223829195 - add last updated to deliverables"
+2026-08-05T02:23:30.318Z  INFO 219923 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "PUBLIC" to version "20260805011829268 - create document feedback tables"
+2026-08-05T02:23:30.337Z  INFO 219923 --- [app] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 7 migrations to schema "PUBLIC", now at version v20260805011829268 (execution time 00:00.063s)
+2026-08-05T02:23:30.470Z  INFO 219923 --- [app] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-08-05T02:23:30.539Z  INFO 219923 --- [app] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.2.Final
+2026-08-05T02:23:30.582Z  INFO 219923 --- [app] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-08-05T02:23:30.978Z  INFO 219923 --- [app] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-08-05T02:23:32.414Z  INFO 219923 --- [app] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-08-05T02:23:32.449Z  INFO 219923 --- [app] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-08-05T02:23:32.979Z  INFO 219923 --- [app] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-08-05T02:23:33.904Z  WARN 219923 --- [app] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-08-05T02:23:34.423Z  INFO 219923 --- [app] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-08-05T02:23:34.441Z  INFO 219923 --- [app] [           main] com.eneik.generated.Application          : Started Application in 7.777 seconds (process running for 8.249)
+2026-08-05T02:24:58.550Z  INFO 219923 --- [app] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-08-05T02:24:58.550Z  INFO 219923 --- [app] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-08-05T02:24:58.552Z  INFO 219923 --- [app] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-08-05T02:27:53.468Z  INFO 219923 --- [app] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-08-05T02:27:53.471Z  INFO 219923 --- [app] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-08-05T02:27:53.473Z  INFO 219923 --- [app] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  04:29 min
+[INFO] Finished at: 2026-08-05T02:27:53Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.3.2:run (default-cli) on project test-forty-first: Process terminated with exit code: 143 -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
