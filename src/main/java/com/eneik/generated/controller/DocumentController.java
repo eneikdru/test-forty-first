@@ -7,18 +7,18 @@ import com.eneik.generated.repository.DocumentRepository;
 import com.eneik.generated.repository.DocumentVersionRepository;
 import com.eneik.generated.repository.AuditLogRepository;
 import com.eneik.generated.service.DocumentService;
+import com.eneik.generated.service.FileStorageService;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -30,30 +30,36 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*")
 public class DocumentController {
 
+    private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
+
+    // Named Constants to prevent 'magic' values (Finding 1 & Finding 2)
+    private static final String DEFAULT_USERNAME = "ivan.ivanov@epidem.ru";
+    private static final String DEFAULT_USER_ID = "ca078170-df17-48f8-bca4-d89000a6e87f";
+    private static final String MOCK_JWT_TOKEN = "mock-jwt-token-xyz";
+    private static final String DEFAULT_ROLE = "Administrator";
+    private static final String DEFAULT_CATEGORY_ID = "edu_center_root";
+    private static final String MOCKED_FULL_NAME_IVAN = "Иванов Иван Иванович";
+    private static final String MOCKED_FULL_NAME_PETR = "Петров Петр Петрович";
+
     private final DocumentRepository documentRepository;
     private final DocumentVersionRepository documentVersionRepository;
     private final AuditLogRepository auditLogRepository;
     private final DocumentService documentService;
+    private final FileStorageService fileStorageService;
     private final ObjectMapper objectMapper;
-
-    private static final String UPLOAD_DIR = "uploads";
 
     public DocumentController(DocumentRepository documentRepository,
                               DocumentVersionRepository documentVersionRepository,
                               AuditLogRepository auditLogRepository,
                               DocumentService documentService,
+                              FileStorageService fileStorageService,
                               ObjectMapper objectMapper) {
         this.documentRepository = documentRepository;
         this.documentVersionRepository = documentVersionRepository;
         this.auditLogRepository = auditLogRepository;
         this.documentService = documentService;
+        this.fileStorageService = fileStorageService;
         this.objectMapper = objectMapper;
-
-        try {
-            Files.createDirectories(Paths.get(UPLOAD_DIR));
-        } catch (IOException e) {
-            // Log or ignore
-        }
     }
 
     private String longToUuidString(Long id) {
@@ -82,6 +88,7 @@ public class DocumentController {
         try {
             return objectMapper.readValue(metaStr, new TypeReference<Map<String, Object>>() {});
         } catch (IOException e) {
+            log.error("[DocumentController] Failed to parse metadata JSON: {}", metaStr, e);
             return new HashMap<>();
         }
     }
@@ -90,6 +97,7 @@ public class DocumentController {
         try {
             return objectMapper.writeValueAsString(metaMap);
         } catch (IOException e) {
+            log.error("[DocumentController] Failed to serialize metadata map: {}", metaMap, e);
             return "{}";
         }
     }
@@ -132,7 +140,7 @@ public class DocumentController {
         response.put("doc_type", meta.getOrDefault("doc_type", "Regulations"));
         response.put("specialty", meta.getOrDefault("specialty", "Other"));
         response.put("edu_level", meta.getOrDefault("edu_level", "Residency"));
-        response.put("category_id", meta.getOrDefault("category_id", "edu_center_root"));
+        response.put("category_id", meta.getOrDefault("category_id", DEFAULT_CATEGORY_ID));
         response.put("tags", meta.getOrDefault("tags", Collections.emptyList()));
 
         List<DocumentVersion> versions = documentVersionRepository.findByDocumentIdOrderByVersionNumberDesc(doc.getId());
@@ -149,7 +157,7 @@ public class DocumentController {
             updated = LocalDateTime.now();
         }
         response.put("updatedAt", updated.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
-        response.put("updatedBy", meta.getOrDefault("updatedBy", "ivan.ivanov@epidem.ru"));
+        response.put("updatedBy", meta.getOrDefault("updatedBy", DEFAULT_USERNAME));
 
         return response;
     }
@@ -157,15 +165,15 @@ public class DocumentController {
     // Auth endpoints
     @PostMapping("/auth/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        String username = request.getOrDefault("username", "ivan.ivanov@epidem.ru");
+        String username = request.getOrDefault("username", DEFAULT_USERNAME);
         Map<String, Object> response = new HashMap<>();
-        response.put("token", "mock-jwt-token-xyz");
+        response.put("token", MOCK_JWT_TOKEN);
 
         Map<String, Object> user = new HashMap<>();
-        user.put("id", "ca078170-df17-48f8-bca4-d89000a6e87f");
+        user.put("id", DEFAULT_USER_ID);
         user.put("username", username);
-        user.put("fullName", username.contains("ivan") ? "Иванов Иван Иванович" : "Петров Петр Петрович");
-        user.put("role", "Administrator");
+        user.put("fullName", username.contains("ivan") ? MOCKED_FULL_NAME_IVAN : MOCKED_FULL_NAME_PETR);
+        user.put("role", DEFAULT_ROLE);
 
         response.put("user", user);
         return ResponseEntity.ok(response);
@@ -313,18 +321,15 @@ public class DocumentController {
             return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Document name is required"));
         }
 
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "ivan.ivanov@epidem.ru";
-        String userId = "ca078170-df17-48f8-bca4-d89000a6e87f";
+        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : DEFAULT_USERNAME;
+        String userId = DEFAULT_USER_ID;
 
-        // Save file locally (simulation or actual write)
-        String originalFilename = file.getOriginalFilename();
-        String savedFilePath = UPLOAD_DIR + "/" + UUID.randomUUID() + "_" + originalFilename;
-
+        // Save file locally delegating to FileStorageService
+        String savedFilePath;
         try {
-            byte[] bytes = file.getBytes();
-            Path path = Paths.get(savedFilePath);
-            Files.write(path, bytes);
+            savedFilePath = fileStorageService.saveFile(file);
         } catch (IOException e) {
+            log.error("[DocumentController] Failed to save uploaded file: {}", file.getOriginalFilename(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "SERVER_ERROR", "message", "Failed to save file: " + e.getMessage()));
         }
@@ -401,19 +406,17 @@ public class DocumentController {
         Document doc = docOpt.get();
         Map<String, Object> metaMap = parseMetadata(doc.getMetadata());
 
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "ivan.ivanov@epidem.ru";
-        String userId = "ca078170-df17-48f8-bca4-d89000a6e87f";
+        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : DEFAULT_USERNAME;
+        String userId = DEFAULT_USER_ID;
 
         String savedFilePath = doc.getFilePath();
         if (file != null && !file.isEmpty()) {
-            String originalFilename = file.getOriginalFilename();
-            savedFilePath = UPLOAD_DIR + "/" + UUID.randomUUID() + "_" + originalFilename;
             try {
-                byte[] bytes = file.getBytes();
-                Files.write(Paths.get(savedFilePath), bytes);
+                savedFilePath = fileStorageService.saveFile(file);
                 metaMap.put("fileSize", file.getSize());
                 metaMap.put("fileType", file.getContentType() != null ? file.getContentType() : "application/octet-stream");
             } catch (IOException e) {
+                log.error("[DocumentController] Failed to save updated file: {}", file.getOriginalFilename(), e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Map.of("error", "SERVER_ERROR", "message", "Failed to save file"));
             }
@@ -475,12 +478,12 @@ public class DocumentController {
                     .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
         }
 
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : "ivan.ivanov@epidem.ru";
-        String userId = "ca078170-df17-48f8-bca4-d89000a6e87f";
+        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : DEFAULT_USERNAME;
+        String userId = DEFAULT_USER_ID;
 
         Document doc = docOpt.get();
         Map<String, Object> meta = parseMetadata(doc.getMetadata());
-        String categoryId = (String) meta.getOrDefault("category_id", "edu_center_root");
+        String categoryId = (String) meta.getOrDefault("category_id", DEFAULT_CATEGORY_ID);
 
         // Delete all versions
         List<DocumentVersion> versions = documentVersionRepository.findByDocumentIdOrderByVersionNumberDesc(docId);
@@ -525,7 +528,7 @@ public class DocumentController {
                     responseVer.put("updatedAt", created.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
 
                     Map<String, Object> meta = parseMetadata(ver.getMetadata());
-                    responseVer.put("updatedBy", meta.getOrDefault("updatedBy", "ivan.ivanov@epidem.ru"));
+                    responseVer.put("updatedBy", meta.getOrDefault("updatedBy", DEFAULT_USERNAME));
                     responseVer.put("versionComment", meta.getOrDefault("versionComment", "Initial version"));
                     responseVer.put("fileSize", meta.getOrDefault("fileSize", 0));
                     return responseVer;
