@@ -210,4 +210,119 @@ public class DocumentControllerTest {
                 .andExpect(jsonPath("$[0].versionComment").value("Update comment for GIA"))
                 .andExpect(jsonPath("$[1].versionNumber").value(1));
     }
+
+    @Test
+    public void testDocumentCommentsSuccess() throws Exception {
+        // Create document first
+        Document document = new Document("Test Document for Feedback", "/path/to/doc.pdf", "{}");
+        document = documentRepository.save(document);
+        String uuid = new java.util.UUID(0, document.getId()).toString();
+
+        // 1. Post comment
+        Map<String, String> requestBody = Map.of("text", "Прошу проверить соответствие новой редакции ФГОС.");
+        mockMvc.perform(post("/api/v1/documents/" + uuid + "/comments")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(requestBody))
+                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.documentId").value(uuid))
+                .andExpect(jsonPath("$.text").value("Прошу проверить соответствие новой редакции ФГОС."))
+                .andExpect(jsonPath("$.user.username").value("ivan.ivanov@epidem.ru"))
+                .andExpect(jsonPath("$.user.fullName").value("Иванов Иван Иванович"))
+                .andExpect(jsonPath("$.user.role").value("Administrator"));
+
+        // 2. Get comments
+        mockMvc.perform(get("/api/v1/documents/" + uuid + "/comments")
+                        .header("Authorization", "Bearer ivan.ivanov@epidem.ru"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].text").value("Прошу проверить соответствие новой редакции ФГОС."))
+                .andExpect(jsonPath("$[0].user.username").value("ivan.ivanov@epidem.ru"));
+    }
+
+    @Test
+    public void testDocumentCommentsValidationAndNotFound() throws Exception {
+        String nonExistentUuid = java.util.UUID.randomUUID().toString();
+
+        // 1. Post to non-existent document
+        Map<String, String> requestBody = Map.of("text", "Some comment text.");
+        mockMvc.perform(post("/api/v1/documents/" + nonExistentUuid + "/comments")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(requestBody)))
+                .andExpect(status().isNotFound());
+
+        // 2. Get comments from non-existent document
+        mockMvc.perform(get("/api/v1/documents/" + nonExistentUuid + "/comments"))
+                .andExpect(status().isNotFound());
+
+        // 3. Create a document to test invalid inputs
+        Document document = new Document("Test Doc", "/path.pdf", "{}");
+        document = documentRepository.save(document);
+        String uuid = new java.util.UUID(0, document.getId()).toString();
+
+        // 4. Missing text field
+        mockMvc.perform(post("/api/v1/documents/" + uuid + "/comments")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of())))
+                .andExpect(status().isBadRequest());
+
+        // 5. Empty text field
+        mockMvc.perform(post("/api/v1/documents/" + uuid + "/comments")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("text", "   "))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testActualizationRequestSuccess() throws Exception {
+        // Create document first
+        Document document = new Document("Test Document for Actualization", "/path/to/doc.pdf", "{}");
+        document = documentRepository.save(document);
+        String uuid = new java.util.UUID(0, document.getId()).toString();
+
+        // Post actualization request
+        Map<String, String> requestBody = Map.of("reason", "Приказ Минздрава изменил требования к разделу Эпидемиология.");
+        mockMvc.perform(post("/api/v1/documents/" + uuid + "/actualization-request")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(requestBody))
+                        .header("Authorization", "Bearer petr.petrov@epidem.ru"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.requestId").exists())
+                .andExpect(jsonPath("$.documentId").value(uuid))
+                .andExpect(jsonPath("$.reason").value("Приказ Минздрава изменил требования к разделу Эпидемиология."))
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.requester.username").value("petr.petrov@epidem.ru"))
+                .andExpect(jsonPath("$.requester.fullName").value("Петров Петр Петрович"))
+                .andExpect(jsonPath("$.requester.role").value("Administrator"));
+    }
+
+    @Test
+    public void testActualizationRequestValidationAndNotFound() throws Exception {
+        String nonExistentUuid = java.util.UUID.randomUUID().toString();
+
+        // 1. Post actualization request on non-existent document
+        Map<String, String> requestBody = Map.of("reason", "Some reason text.");
+        mockMvc.perform(post("/api/v1/documents/" + nonExistentUuid + "/actualization-request")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(requestBody)))
+                .andExpect(status().isNotFound());
+
+        // 2. Create a document to test invalid inputs
+        Document document = new Document("Test Doc", "/path.pdf", "{}");
+        document = documentRepository.save(document);
+        String uuid = new java.util.UUID(0, document.getId()).toString();
+
+        // 3. Missing reason field
+        mockMvc.perform(post("/api/v1/documents/" + uuid + "/actualization-request")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of())))
+                .andExpect(status().isBadRequest());
+
+        // 4. Empty reason field
+        mockMvc.perform(post("/api/v1/documents/" + uuid + "/actualization-request")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("reason", "   "))))
+                .andExpect(status().isBadRequest());
+    }
 }

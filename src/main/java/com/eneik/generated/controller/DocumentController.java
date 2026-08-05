@@ -6,6 +6,10 @@ import com.eneik.generated.model.AuditLog;
 import com.eneik.generated.repository.DocumentRepository;
 import com.eneik.generated.repository.DocumentVersionRepository;
 import com.eneik.generated.repository.AuditLogRepository;
+import com.eneik.generated.repository.CommentRepository;
+import com.eneik.generated.repository.ActualizationRequestRepository;
+import com.eneik.generated.model.Comment;
+import com.eneik.generated.model.ActualizationRequest;
 import com.eneik.generated.service.DocumentService;
 import com.eneik.generated.service.FileStorageService;
 
@@ -47,19 +51,25 @@ public class DocumentController {
     private final DocumentService documentService;
     private final FileStorageService fileStorageService;
     private final ObjectMapper objectMapper;
+    private final CommentRepository commentRepository;
+    private final ActualizationRequestRepository actualizationRequestRepository;
 
     public DocumentController(DocumentRepository documentRepository,
                               DocumentVersionRepository documentVersionRepository,
                               AuditLogRepository auditLogRepository,
                               DocumentService documentService,
                               FileStorageService fileStorageService,
-                              ObjectMapper objectMapper) {
+                              ObjectMapper objectMapper,
+                              CommentRepository commentRepository,
+                              ActualizationRequestRepository actualizationRequestRepository) {
         this.documentRepository = documentRepository;
         this.documentVersionRepository = documentVersionRepository;
         this.auditLogRepository = auditLogRepository;
         this.documentService = documentService;
         this.fileStorageService = fileStorageService;
         this.objectMapper = objectMapper;
+        this.commentRepository = commentRepository;
+        this.actualizationRequestRepository = actualizationRequestRepository;
     }
 
     private String longToUuidString(Long id) {
@@ -98,7 +108,7 @@ public class DocumentController {
             return objectMapper.writeValueAsString(metaMap);
         } catch (IOException e) {
             log.error("[DocumentController] Failed to serialize metadata map: {}", metaMap, e);
-            return "{}";
+            throw new RuntimeException("Failed to serialize metadata", e);
         }
     }
 
@@ -585,5 +595,140 @@ public class DocumentController {
         response.put("totalElements", totalElements);
 
         return ResponseEntity.ok(response);
+    }
+
+    private Map<String, Object> mapCommentToResponse(Comment comment) {
+        Map<String, Object> user = new LinkedHashMap<>();
+        user.put("id", comment.getUserId());
+        user.put("username", comment.getUsername());
+        user.put("fullName", comment.getFullName());
+        user.put("role", comment.getUserRole());
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("id", longToUuidString(comment.getId()));
+        response.put("documentId", longToUuidString(comment.getDocument().getId()));
+        response.put("user", user);
+        response.put("text", comment.getText());
+
+        LocalDateTime created = comment.getCreatedAt();
+        if (created == null) {
+            created = LocalDateTime.now();
+        }
+        response.put("createdAt", created.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+        return response;
+    }
+
+    private Map<String, Object> mapActualizationToResponse(ActualizationRequest req) {
+        Map<String, Object> user = new LinkedHashMap<>();
+        user.put("id", req.getRequesterId());
+        user.put("username", req.getRequesterUsername());
+        user.put("fullName", req.getRequesterFullName());
+        user.put("role", req.getRequesterRole());
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("requestId", longToUuidString(req.getId()));
+        response.put("documentId", longToUuidString(req.getDocument().getId()));
+        response.put("requester", user);
+        response.put("reason", req.getReason());
+        response.put("status", req.getStatus());
+
+        LocalDateTime created = req.getCreatedAt();
+        if (created == null) {
+            created = LocalDateTime.now();
+        }
+        response.put("createdAt", created.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+        return response;
+    }
+
+    @GetMapping("/documents/{id}/comments")
+    public ResponseEntity<?> getDocumentComments(@PathVariable String id) {
+        Long docId = uuidStringToLong(id);
+        if (docId == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        Optional<Document> docOpt = documentRepository.findById(docId);
+        if (docOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        List<Comment> comments = commentRepository.findByDocumentId(docId);
+        List<Map<String, Object>> response = comments.stream()
+                .map(this::mapCommentToResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/documents/{id}/comments")
+    public ResponseEntity<?> addDocumentComment(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        Long docId = uuidStringToLong(id);
+        if (docId == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        Optional<Document> docOpt = documentRepository.findById(docId);
+        if (docOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        String text = body != null ? body.get("text") : null;
+        if (text == null || text.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Comment text is required"));
+        }
+
+        String token = (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
+        String username = (token != null && !token.equals(MOCK_JWT_TOKEN)) ? token : DEFAULT_USERNAME;
+        String userId = DEFAULT_USER_ID;
+        String fullName = username.contains("ivan") ? MOCKED_FULL_NAME_IVAN : MOCKED_FULL_NAME_PETR;
+        String role = DEFAULT_ROLE;
+
+        Comment comment = new Comment(docOpt.get(), userId, username, fullName, role, text);
+        comment = commentRepository.save(comment);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapCommentToResponse(comment));
+    }
+
+    @PostMapping("/documents/{id}/actualization-request")
+    public ResponseEntity<?> addActualizationRequest(
+            @PathVariable String id,
+            @RequestBody Map<String, String> body,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        Long docId = uuidStringToLong(id);
+        if (docId == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        Optional<Document> docOpt = documentRepository.findById(docId);
+        if (docOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
+        }
+
+        String reason = body != null ? body.get("reason") : null;
+        if (reason == null || reason.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Actualization reason is required"));
+        }
+
+        String token = (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
+        String username = (token != null && !token.equals(MOCK_JWT_TOKEN)) ? token : DEFAULT_USERNAME;
+        String userId = DEFAULT_USER_ID;
+        String fullName = username.contains("ivan") ? MOCKED_FULL_NAME_IVAN : MOCKED_FULL_NAME_PETR;
+        String role = DEFAULT_ROLE;
+
+        ActualizationRequest req = new ActualizationRequest(docOpt.get(), userId, username, fullName, role, reason, "PENDING");
+        req = actualizationRequestRepository.save(req);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(mapActualizationToResponse(req));
     }
 }
