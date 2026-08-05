@@ -1,0 +1,7 @@
+CREATE TABLE project_tasks (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    task_id VARCHAR(100) NOT NULL UNIQUE,
+    pr_number INT,
+    session_status VARCHAR(100) NOT NULL,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
