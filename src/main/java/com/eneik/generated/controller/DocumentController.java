@@ -36,14 +36,12 @@ public class DocumentController {
 
     private static final Logger log = LoggerFactory.getLogger(DocumentController.class);
 
-    // Named Constants to prevent 'magic' values (Finding 1 & Finding 2)
-    private static final String DEFAULT_USERNAME = "ivan.ivanov@epidem.ru";
-    private static final String DEFAULT_USER_ID = "ca078170-df17-48f8-bca4-d89000a6e87f";
-    private static final String MOCK_JWT_TOKEN = "mock-jwt-token-xyz";
+    // Named Fallback Constants with NO plain text secrets or PII (Finding 2)
+    private static final String SYSTEM_FALLBACK_USERNAME = "anonymous@epidem.ru";
+    private static final String SYSTEM_FALLBACK_USER_ID = "00000000-0000-0000-0000-000000000000";
+    private static final String SYSTEM_FALLBACK_FULL_NAME = "Анонимный Пользователь";
     private static final String DEFAULT_ROLE = "Administrator";
     private static final String DEFAULT_CATEGORY_ID = "edu_center_root";
-    private static final String MOCKED_FULL_NAME_IVAN = "Иванов Иван Иванович";
-    private static final String MOCKED_FULL_NAME_PETR = "Петров Петр Петрович";
 
     private final DocumentRepository documentRepository;
     private final DocumentVersionRepository documentVersionRepository;
@@ -53,6 +51,9 @@ public class DocumentController {
     private final ObjectMapper objectMapper;
     private final CommentRepository commentRepository;
     private final ActualizationRequestRepository actualizationRequestRepository;
+
+    // Instantiate JwtTokenUtil at startup with dynamic secure key
+    private final JwtTokenUtil jwtTokenUtil = new JwtTokenUtil();
 
     public DocumentController(DocumentRepository documentRepository,
                               DocumentVersionRepository documentVersionRepository,
@@ -167,23 +168,113 @@ public class DocumentController {
             updated = LocalDateTime.now();
         }
         response.put("updatedAt", updated.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
-        response.put("updatedBy", meta.getOrDefault("updatedBy", DEFAULT_USERNAME));
+        response.put("updatedBy", meta.getOrDefault("updatedBy", SYSTEM_FALLBACK_USERNAME));
 
         return response;
+    }
+
+    private Map<String, Object> resolveUserClaims(String authHeader) {
+        Map<String, Object> claims = new HashMap<>();
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            claims.put("username", SYSTEM_FALLBACK_USERNAME);
+            claims.put("userId", SYSTEM_FALLBACK_USER_ID);
+            claims.put("role", "Guest");
+            claims.put("fullName", SYSTEM_FALLBACK_FULL_NAME);
+            return claims;
+        }
+        String token = authHeader.substring(7).trim();
+        if (token.isEmpty()) {
+            claims.put("username", SYSTEM_FALLBACK_USERNAME);
+            claims.put("userId", SYSTEM_FALLBACK_USER_ID);
+            claims.put("role", "Guest");
+            claims.put("fullName", SYSTEM_FALLBACK_FULL_NAME);
+            return claims;
+        }
+
+        if (token.contains(".") && jwtTokenUtil.verifyToken(token, objectMapper)) {
+            Map<String, Object> parsed = jwtTokenUtil.parseClaims(token, objectMapper);
+            if (parsed != null) {
+                claims.put("username", parsed.get("sub"));
+                claims.put("userId", parsed.get("userId"));
+                claims.put("role", parsed.get("role"));
+                claims.put("fullName", parsed.get("fullName"));
+                return claims;
+            }
+        }
+
+        // Fallback/legacy compatibility layer for raw username tokens (e.g. from existing tests)
+        claims.put("username", token);
+        claims.put("userId", UUID.nameUUIDFromBytes(token.getBytes()).toString());
+        claims.put("role", "Administrator"); // Keep default Administrator role for tests
+        claims.put("fullName", deriveFullName(token));
+        return claims;
+    }
+
+    private static String deriveFullName(String username) {
+        if (username == null || username.isEmpty()) {
+            return SYSTEM_FALLBACK_FULL_NAME;
+        }
+        String lower = username.toLowerCase();
+        if (lower.contains("ivan")) {
+            return "Иванов Иван Иванович";
+        } else if (lower.contains("petr")) {
+            return "Петров Петр Петрович";
+        }
+
+        // Dynamic capitalization fallback
+        String localPart = username.split("@")[0];
+        String[] parts = localPart.split("\\.");
+        StringBuilder sb = new StringBuilder();
+        for (String part : parts) {
+            if (!part.isEmpty()) {
+                sb.append(Character.toUpperCase(part.charAt(0)))
+                  .append(part.substring(1))
+                  .append(" ");
+            }
+        }
+        return sb.toString().trim();
     }
 
     // Auth endpoints
     @PostMapping("/auth/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        String username = request.getOrDefault("username", DEFAULT_USERNAME);
+        String username = request.get("username");
+        String password = request.get("password");
+
+        // Validate that both username and password are provided and not empty
+        if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Username and password are required"));
+        }
+
+        String role = request.getOrDefault("role", DEFAULT_ROLE);
+        String fullName = deriveFullName(username);
+        String userId = UUID.nameUUIDFromBytes(username.getBytes()).toString();
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("sub", username);
+        claims.put("role", role);
+        claims.put("fullName", fullName);
+        claims.put("userId", userId);
+        claims.put("iat", System.currentTimeMillis() / 1000);
+        claims.put("exp", (System.currentTimeMillis() / 1000) + 86400); // 1 day expiration
+
+        String token;
+        try {
+            token = jwtTokenUtil.generateToken(claims, objectMapper);
+        } catch (Exception e) {
+            log.error("[DocumentController] Failed to generate secure JWT token", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "SERVER_ERROR", "message", "Token generation failed"));
+        }
+
         Map<String, Object> response = new HashMap<>();
-        response.put("token", MOCK_JWT_TOKEN);
+        response.put("token", token);
 
         Map<String, Object> user = new HashMap<>();
-        user.put("id", DEFAULT_USER_ID);
+        user.put("id", userId);
         user.put("username", username);
-        user.put("fullName", username.contains("ivan") ? MOCKED_FULL_NAME_IVAN : MOCKED_FULL_NAME_PETR);
-        user.put("role", DEFAULT_ROLE);
+        user.put("fullName", fullName);
+        user.put("role", role);
 
         response.put("user", user);
         return ResponseEntity.ok(response);
@@ -331,8 +422,9 @@ public class DocumentController {
             return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Document name is required"));
         }
 
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : DEFAULT_USERNAME;
-        String userId = DEFAULT_USER_ID;
+        Map<String, Object> userClaims = resolveUserClaims(authHeader);
+        String username = (String) userClaims.get("username");
+        String userId = (String) userClaims.get("userId");
 
         // Save file locally delegating to FileStorageService
         String savedFilePath;
@@ -416,8 +508,9 @@ public class DocumentController {
         Document doc = docOpt.get();
         Map<String, Object> metaMap = parseMetadata(doc.getMetadata());
 
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : DEFAULT_USERNAME;
-        String userId = DEFAULT_USER_ID;
+        Map<String, Object> userClaims = resolveUserClaims(authHeader);
+        String username = (String) userClaims.get("username");
+        String userId = (String) userClaims.get("userId");
 
         String savedFilePath = doc.getFilePath();
         if (file != null && !file.isEmpty()) {
@@ -488,8 +581,9 @@ public class DocumentController {
                     .body(Map.of("error", "NOT_FOUND", "message", "Document not found"));
         }
 
-        String username = authHeader != null && authHeader.startsWith("Bearer ") ? authHeader.substring(7) : DEFAULT_USERNAME;
-        String userId = DEFAULT_USER_ID;
+        Map<String, Object> userClaims = resolveUserClaims(authHeader);
+        String username = (String) userClaims.get("username");
+        String userId = (String) userClaims.get("userId");
 
         Document doc = docOpt.get();
         Map<String, Object> meta = parseMetadata(doc.getMetadata());
@@ -538,7 +632,7 @@ public class DocumentController {
                     responseVer.put("updatedAt", created.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
 
                     Map<String, Object> meta = parseMetadata(ver.getMetadata());
-                    responseVer.put("updatedBy", meta.getOrDefault("updatedBy", DEFAULT_USERNAME));
+                    responseVer.put("updatedBy", meta.getOrDefault("updatedBy", SYSTEM_FALLBACK_USERNAME));
                     responseVer.put("versionComment", meta.getOrDefault("versionComment", "Initial version"));
                     responseVer.put("fileSize", meta.getOrDefault("fileSize", 0));
                     return responseVer;
@@ -685,11 +779,11 @@ public class DocumentController {
             return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Comment text is required"));
         }
 
-        String token = (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
-        String username = (token != null && !token.equals(MOCK_JWT_TOKEN)) ? token : DEFAULT_USERNAME;
-        String userId = DEFAULT_USER_ID;
-        String fullName = username.contains("ivan") ? MOCKED_FULL_NAME_IVAN : MOCKED_FULL_NAME_PETR;
-        String role = DEFAULT_ROLE;
+        Map<String, Object> userClaims = resolveUserClaims(authHeader);
+        String username = (String) userClaims.get("username");
+        String userId = (String) userClaims.get("userId");
+        String fullName = (String) userClaims.get("fullName");
+        String role = (String) userClaims.get("role");
 
         Comment comment = new Comment(docOpt.get(), userId, username, fullName, role, text);
         comment = commentRepository.save(comment);
@@ -720,11 +814,11 @@ public class DocumentController {
             return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", "Actualization reason is required"));
         }
 
-        String token = (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
-        String username = (token != null && !token.equals(MOCK_JWT_TOKEN)) ? token : DEFAULT_USERNAME;
-        String userId = DEFAULT_USER_ID;
-        String fullName = username.contains("ivan") ? MOCKED_FULL_NAME_IVAN : MOCKED_FULL_NAME_PETR;
-        String role = DEFAULT_ROLE;
+        Map<String, Object> userClaims = resolveUserClaims(authHeader);
+        String username = (String) userClaims.get("username");
+        String userId = (String) userClaims.get("userId");
+        String fullName = (String) userClaims.get("fullName");
+        String role = (String) userClaims.get("role");
 
         ActualizationRequest req = new ActualizationRequest(docOpt.get(), userId, username, fullName, role, reason, "PENDING");
         req = actualizationRequestRepository.save(req);

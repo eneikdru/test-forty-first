@@ -325,4 +325,79 @@ public class DocumentControllerTest {
                         .content(objectMapper.writeValueAsString(Map.of("reason", "   "))))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    public void testRealJwtLoginAndAuthenticatedFlow() throws Exception {
+        // 1. Perform a login request with credentials
+        Map<String, String> loginRequest = Map.of(
+            "username", "test.user@epidem.ru",
+            "password", "somePassword123",
+            "role", "Administrator"
+        );
+
+        String loginResponse = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").exists())
+                .andExpect(jsonPath("$.user.username").value("test.user@epidem.ru"))
+                .andExpect(jsonPath("$.user.fullName").value("Test User"))
+                .andExpect(jsonPath("$.user.role").value("Administrator"))
+                .andReturn().getResponse().getContentAsString();
+
+        Map<?, ?> responseMap = objectMapper.readValue(loginResponse, Map.class);
+        String realJwtToken = (String) responseMap.get("token");
+
+        // 2. Perform a document upload using the dynamically generated secure JWT token
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "jwt_test.pdf",
+                "application/pdf",
+                "JWT test content".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/v1/documents")
+                        .file(file)
+                        .param("name", "Документ по JWT")
+                        .param("doc_type", "Regulations")
+                        .param("specialty", "Epidemiology")
+                        .param("edu_level", "Residency")
+                        .param("category_id", "edu_center_root")
+                        .header("Authorization", "Bearer " + realJwtToken))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Документ по JWT"))
+                .andExpect(jsonPath("$.version").value(1));
+
+        // 3. Verify Document is saved with the correct metadata showing updatedBy is test.user@epidem.ru
+        List<Document> docs = documentRepository.findAll();
+        assertFalse(docs.isEmpty());
+        Document doc = docs.stream().filter(d -> d.getTitle().equals("Документ по JWT")).findFirst().orElse(null);
+        assertNotNull(doc);
+        assertTrue(doc.getMetadata().contains("test.user@epidem.ru"));
+
+        // 4. Verify Audit Log contains the real userId and username extracted from the token
+        List<AuditLog> logs = auditLogRepository.findAll();
+        assertFalse(logs.isEmpty());
+        AuditLog log = logs.stream().filter(l -> l.getUsername().equals("test.user@epidem.ru")).findFirst().orElse(null);
+        assertNotNull(log);
+        assertEquals("DOCUMENT_UPLOAD", log.getAction());
+        assertEquals("edu_center_root", log.getCategoryId());
+    }
+
+    @Test
+    public void testJwtLoginMissingCredentialsReturnsBadRequest() throws Exception {
+        // Missing username
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("password", "somePassword123"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("BAD_REQUEST"));
+
+        // Missing password
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(Map.of("username", "test.user@epidem.ru"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("BAD_REQUEST"));
+    }
 }
