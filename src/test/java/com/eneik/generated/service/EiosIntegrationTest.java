@@ -3,10 +3,15 @@ package com.eneik.generated.service;
 import com.eneik.generated.model.*;
 import com.eneik.generated.repository.DocumentRepository;
 import com.eneik.generated.repository.RoleRepository;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -15,11 +20,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
 public class EiosIntegrationTest {
+
+    private static WireMockServer wireMockServer;
 
     @Autowired
     private DocumentService documentService;
@@ -48,8 +56,33 @@ public class EiosIntegrationTest {
     @Autowired
     private EiosIntegrationScheduler scheduler;
 
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        wireMockServer = new WireMockServer(0);
+        wireMockServer.start();
+        registry.add("telegram.api.url", () -> "http://localhost:" + wireMockServer.port());
+        registry.add("eios.api.url", () -> "http://localhost:" + wireMockServer.port());
+    }
+
+    @AfterAll
+    static void stopServer() {
+        if (wireMockServer != null && wireMockServer.isRunning()) {
+            wireMockServer.stop();
+        }
+    }
+
     @BeforeEach
     public void setup() {
+        WireMock.configureFor("localhost", wireMockServer.port());
+        wireMockServer.resetAll();
+
+        // Stub telegram bot notification
+        stubFor(post(urlEqualTo("/bot/sendMessage"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"ok\":true}")));
+
         notificationService.clearNotifications();
         timeService.clearFixedTime();
     }
@@ -108,11 +141,15 @@ public class EiosIntegrationTest {
         // Clear all roles to verify sync cleanly
         roleRepository.deleteAll();
 
-        // Setup mock roles returned by the client
-        List<EiosRole> mockEiosRoles = new ArrayList<>();
-        mockEiosRoles.add(new EiosRole("Epidemiologist", "Specialist in epidemics"));
-        mockEiosRoles.add(new EiosRole("Virologist", "Virus expert"));
-        eiosClient.setMockRoles(mockEiosRoles);
+        // Stub roles API via WireMock
+        stubFor(get(urlEqualTo("/api/roles"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[" +
+                                "  {\"name\": \"Epidemiologist\", \"description\": \"Specialist in epidemics\"}," +
+                                "  {\"name\": \"Virologist\", \"description\": \"Virus expert\"}" +
+                                "]")));
 
         // Run sync
         eiosSyncService.syncRoles();
@@ -130,7 +167,15 @@ public class EiosIntegrationTest {
         assertEquals("Virus expert", viro.getDescription());
 
         // Update a description on EIOS and re-sync
-        mockEiosRoles.get(0).setDescription("Epidemiologist with advanced clinical credentials");
+        stubFor(get(urlEqualTo("/api/roles"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[" +
+                                "  {\"name\": \"Epidemiologist\", \"description\": \"Epidemiologist with advanced clinical credentials\"}," +
+                                "  {\"name\": \"Virologist\", \"description\": \"Virus expert\"}" +
+                                "]")));
+
         eiosSyncService.syncRoles();
 
         Role updatedEpi = roleRepository.findByName("Epidemiologist").orElse(null);
@@ -140,6 +185,11 @@ public class EiosIntegrationTest {
 
     @Test
     public void testEiosSyncServiceExportsAnalytics() {
+        // Stub analytics API via WireMock
+        stubFor(post(urlEqualTo("/api/analytics"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
         // Record some user analytics inside the last 24h window
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("source", "integration-test");
@@ -155,23 +205,28 @@ public class EiosIntegrationTest {
         // Run analytics export
         eiosSyncService.exportAnalytics();
 
-        // Verify analytics are exported
-        List<EiosExportRecord> exported = eiosClient.getExportedRecords();
-        assertFalse(exported.isEmpty(), "Exported analytics records should not be empty");
-
-        EiosExportRecord record = exported.stream()
-                .filter(r -> "user_99".equals(r.getUserId()))
-                .findFirst()
-                .orElse(null);
-
-        assertNotNull(record);
-        assertEquals("DOWNLOAD_DOCUMENT", record.getActionType());
-        assertEquals("doc_777", record.getResourceId());
-        assertEquals("DOCUMENT", record.getResourceType());
+        // Verify HTTP request payload was delivered correctly using WireMock verifications
+        verify(postRequestedFor(urlEqualTo("/api/analytics"))
+                .withRequestBody(matchingJsonPath("$[0].userId", equalTo("user_99")))
+                .withRequestBody(matchingJsonPath("$[0].actionType", equalTo("DOWNLOAD_DOCUMENT")))
+                .withRequestBody(matchingJsonPath("$[0].resourceId", equalTo("doc_777")))
+                .withRequestBody(matchingJsonPath("$[0].resourceType", equalTo("DOCUMENT")))
+        );
     }
 
     @Test
     public void testSchedulerTriggeringRunsSuccessfully() {
+        // Stub role API and analytics API to prevent scheduler exceptions
+        stubFor(get(urlEqualTo("/api/roles"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[]")));
+
+        stubFor(post(urlEqualTo("/api/analytics"))
+                .willReturn(aResponse()
+                        .withStatus(200)));
+
         // Verify scheduling triggering doesn't throw exceptions and invokes jobs
         assertDoesNotThrow(() -> scheduler.runEiosSyncAndExport());
     }
