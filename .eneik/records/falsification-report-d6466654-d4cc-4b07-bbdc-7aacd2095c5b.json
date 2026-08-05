@@ -1,0 +1,72 @@
+{
+  "violations": [
+    {
+      "roleTag": "BARCAN-TAG-00",
+      "type": "refusal_criteria",
+      "reason": "DocumentController.java violates the obligatory criteria against 'magic' constants. Strings like 'ivan.ivanov@epidem.ru' and 'ca078170-df17-48f8-bca4-d89000a6e87f' are hardcoded inline (e.g., in updateDocument, deleteDocument) instead of being extracted to named constants."
+    },
+    {
+      "roleTag": "BARCAN-TAG-07",
+      "type": "refusal_criteria",
+      "reason": "DocumentController.java violates the strict prohibition against storing secrets or PII in plain text. It contains hardcoded PII ('ivan.ivanov@epidem.ru') and a mocked JWT token ('mock-jwt-token-xyz')."
+    },
+    {
+      "roleTag": "BARCAN-TAG-02",
+      "type": "refusal_criteria",
+      "reason": "The serializeMetadata function in DocumentController.java silently swallows an IOException and returns '{}' without logging the error, which violates the forbidden rule against silent suppression of errors."
+    },
+    {
+      "roleTag": "BARCAN-TAG-07",
+      "type": "stub",
+      "reason": "The /auth/login endpoint in src/main/java/com/eneik/generated/controller/DocumentController.java fakes success without doing any real authentication work by returning a hardcoded fixture response ('mock-jwt-token-xyz') and a static user object."
+    },
+    {
+      "roleTag": "BARCAN-TAG-02",
+      "type": "stub",
+      "reason": "The serializeMetadata function in src/main/java/com/eneik/generated/controller/DocumentController.java contains a try/catch block that swallows a real IOException and fakes success by returning a plausible-looking empty JSON object ('{}') instead of properly handling the failure."
+    },
+    {
+      "roleTag": "BARCAN-TAG-02",
+      "type": "stub",
+      "reason": "The sendAnalyticsExport method in src/main/java/com/eneik/generated/service/DefaultEiosClient.java fakes success by adding records to an in-memory list and logging a completion message ('Exporting X analytics records to EIOS...') when eiosApiUrl is not set, without performing any real data transmission."
+    },
+    {
+      "roleTag": "BARCAN-TAG-11",
+      "type": "layer_violation",
+      "reason": "The 'Скачать PDF' and 'Скачать DOCX' buttons in frontend/src/components/DocumentSearch.svelte represent an unwired UI slice. They prevent default behavior and trigger a JavaScript alert ('Скачивание PDF начато (эмуляция)...') instead of making a real backend request."
+    },
+    {
+      "roleTag": "BARCAN-TAG-11",
+      "type": "layer_violation",
+      "reason": "The postComment and sendActualizationRequest functions in frontend/src/components/DocumentSearch.svelte are unwired to the backend. They mutate local state (commentsDb, actualizationSuccess) and silently drop the data without making any API calls."
+    },
+    {
+      "roleTag": "BARCAN-TAG-00",
+      "type": "methodological",
+      "philosopher": "Гилберт Райл",
+      "thesis": "Принцип различия «знать что» и «знать как»",
+      "score": "3",
+      "mustBe": "The controller must declare what should happen (knowing-that) and delegate procedural file I/O execution (knowing-how) to a service layer.",
+      "performance": "Separating routing logic from file I/O operations improves testability and maintains declarative intent.",
+      "attractive": "Clean architecture boundary between HTTP request handling and procedural file storage."
+    },
+    {
+      "roleTag": "BARCAN-TAG-09",
+      "type": "specification_coverage",
+      "prNumber": 63,
+      "reason": "As identified in PR 63, the client specification requires the frontend UI to be strictly in Russian, but the code still contains non-Russian text such as 'Офлайн-симуляция ON', 'active-фильтры', and 'official-запрос'."
+    },
+    {
+      "roleTag": "BARCAN-TAG-09",
+      "type": "specification_coverage",
+      "prNumber": 63,
+      "reason": "As identified in PR 63, the client specification requires document export to PDF/DOCX formats, but the backend DocumentController completely lacks the corresponding export endpoints to support this feature."
+    },
+    {
+      "roleTag": "BARCAN-TAG-09",
+      "type": "specification_coverage",
+      "prNumber": 63,
+      "reason": "As identified in PR 63, the client specification requires functionality for commenting and sending actualization requests, but the backend lacks any endpoints or database models to process and persist this data."
+    }
+  ]
+}
