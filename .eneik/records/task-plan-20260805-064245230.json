@@ -1,0 +1,132 @@
+{
+  "epics": [
+    {
+      "existingEpicId": null,
+      "title": "User Account and Access Permissions Configuration Dashboard",
+      "jtbd": "When an Administrator needs to register new teachers or students or adjust their roles, I want an administrative dashboard to manage users and configure permissions, so that access control policies are accurately enforced.",
+      "kanoClass": "Must-Be",
+      "cynefinDomain": "clear",
+      "sixSigmaMetric": "reduce overall permission configuration errors from 10 to 0",
+      "tocConstraintRef": "access control policy enforcement",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Administrator can view, create, update, or revoke user accounts and assign roles such as Teacher, Student, or Content-manager"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch access permissions configuration backend logic",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing user management logic for this epic, I want to patch the existing backend services, so that access control policies are accurately enforced.",
+          "acceptanceCriteria": "Given an Administrator accesses user management,\nWhen they update roles,\nThen the changes are correctly enforced in the backend.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "backend access control execution",
+          "sixSigmaMetric": "reduce backend logic permission errors from 10 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "QA for Access Permissions Configuration",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing user management logic for this epic, I want to verify the patched functionality across the test pyramid, so that access control policies are accurately enforced.",
+          "acceptanceCriteria": "Given an Administrator accesses user management,\nWhen they update roles,\nThen tests confirm the changes are correctly enforced in the backend.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "access control testing pipeline",
+          "sixSigmaMetric": "reduce unverified access control scenarios from 10 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    },
+    {
+      "existingEpicId": "cd80afef-9c62-49f4-91d0-d4417fca4d48",
+      "sixSigmaMetric": "reduce overall unreviewed actualization requests from 20 to 0",
+      "tocConstraintRef": "document actualization review process",
+      "sourceIndex": 1,
+      "requirements": [
+        "R1: Administrator can retrieve a paginated list of actualization requests with document IDs, requester details, reasons, and status"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch document actualization GET endpoint",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing actualization review for this epic, I want to patch the existing GET endpoint, so that outdated educational documents are promptly revised or archived.",
+          "acceptanceCriteria": "Given multiple actualization requests exist,\nWhen an Administrator calls the GET endpoint,\nThen a paginated list of actualization requests is returned.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "document actualization API endpoint",
+          "sixSigmaMetric": "reduce unserved GET request failures from 20 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "QA for Actualization Review Interface",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing actualization review for this epic, I want to verify the GET endpoint across the test pyramid, so that outdated educational documents are promptly revised or archived.",
+          "acceptanceCriteria": "Given multiple actualization requests exist,\nWhen an Administrator calls the GET endpoint,\nThen tests confirm a paginated list is correctly returned.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "actualization API test coverage",
+          "sixSigmaMetric": "reduce unverified GET endpoint scenarios from 20 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    },
+    {
+      "existingEpicId": null,
+      "title": "Document Version Restoration Mechanism",
+      "jtbd": "When an incorrect or corrupt document version is published, I want to rollback or restore the document to a previously archived version, so that users do not download invalid or outdated guidelines.",
+      "kanoClass": "Performance",
+      "cynefinDomain": "clear",
+      "sixSigmaMetric": "reduce overall time to restore correct document version from 15 mins to 1 min",
+      "tocConstraintRef": "document version rollback process",
+      "sourceIndex": 2,
+      "requirements": [
+        "R1: Administrator can trigger a version restore command to mark an archived version as active and archive the previously active version"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch document version restoration logic",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing version restoration for this epic, I want to patch the existing versioning logic, so that users do not download invalid or outdated guidelines.",
+          "acceptanceCriteria": "Given a document has archived versions,\nWhen an Administrator restores a version,\nThen the target version becomes active and the old one is archived.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "document version transition execution",
+          "sixSigmaMetric": "reduce backend version transition time from 15 mins to 1 min",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "QA for Document Version Restoration",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing version restoration for this epic, I want to verify the restore command across the test pyramid, so that users do not download invalid or outdated guidelines.",
+          "acceptanceCriteria": "Given a document has archived versions,\nWhen an Administrator restores a version,\nThen tests confirm the target version becomes active and the old one is archived.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "version restoration test coverage",
+          "sixSigmaMetric": "reduce unverified version restoration scenarios from 15 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
