@@ -1,0 +1,44 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "32901e1d-d8d3-4364-a840-03a32efc3324",
+      "sixSigmaMetric": "Reduce projects falsely stuck in DECOMPOSING state from 1 to 0",
+      "tocConstraintRef": "Deliverable readiness calculation pipeline",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Correct the readiness calculation logic to correctly transition the project out of the DECOMPOSING state when all deliverables are merged"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch Deliverable Readiness Calculation Logic",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the calculation fix for this epic, I want to correct the condition for decomposition completion, so that the stagnation warning is resolved when 100% of items are merged",
+          "acceptanceCriteria": "Given a project where all 19 of 19 work items are merged,\nWhen the readiness state is evaluated,\nThen decompositionComplete evaluates to true and the stagnation warning is dismissed.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Readiness metric evaluation logic",
+          "sixSigmaMetric": "Increase correct DECOMPOSING state resolution rate from 0% to 100%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "QA Verification for Readiness Calculation",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When implementing QA verification for this epic, I want to test the corrected state transitions, so that future calculations accurately reflect deliverable progress",
+          "acceptanceCriteria": "Given the updated readiness calculation logic,\nWhen tests are executed,\nThen unit and integration tests successfully verify the calculation and state transitions for fully merged deliverables.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Readiness state QA coverage",
+          "sixSigmaMetric": "Ensure 100% test coverage for the readiness calculation edge cases",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
