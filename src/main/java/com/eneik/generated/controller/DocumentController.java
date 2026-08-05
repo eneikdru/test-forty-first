@@ -363,6 +363,78 @@ public class DocumentController {
         return ResponseEntity.noContent().build();
     }
 
+    private int getLevenshteinDistance(String s, String t) {
+        if (s == null || t == null) {
+            return 0;
+        }
+        int n = s.length();
+        int m = t.length();
+        if (n == 0) return m;
+        if (m == 0) return n;
+
+        int[] p = new int[n + 1];
+        int[] d = new int[n + 1];
+        int[] _d;
+
+        for (int i = 0; i <= n; i++) {
+            p[i] = i;
+        }
+
+        for (int j = 1; j <= m; j++) {
+            char t_j = t.charAt(j - 1);
+            d[0] = j;
+
+            for (int i = 1; i <= n; i++) {
+                int cost = s.charAt(i - 1) == t_j ? 0 : 1;
+                d[i] = Math.min(Math.min(d[i - 1] + 1, p[i] + 1), p[i - 1] + cost);
+            }
+
+            _d = p;
+            p = d;
+            d = _d;
+        }
+
+        return p[n];
+    }
+
+    private boolean isFuzzyMatch(String query, String target) {
+        if (query == null || target == null || query.isBlank() || target.isBlank()) {
+            return false;
+        }
+
+        String[] qWords = query.toLowerCase().replaceAll("[^\\p{L}\\p{N}\\s]", " ").trim().split("\\s+");
+        String[] tWords = target.toLowerCase().replaceAll("[^\\p{L}\\p{N}\\s]", " ").trim().split("\\s+");
+
+        if (qWords.length == 0 || tWords.length == 0) {
+            return false;
+        }
+
+        for (String qWord : qWords) {
+            if (qWord.isBlank()) continue;
+            boolean wordMatched = false;
+            for (String tWord : tWords) {
+                if (tWord.isBlank()) continue;
+                if (qWord.length() <= 2) {
+                    if (qWord.equals(tWord)) {
+                        wordMatched = true;
+                        break;
+                    }
+                } else {
+                    int threshold = qWord.length() <= 4 ? 1 : (qWord.length() <= 7 ? 2 : 3);
+                    if (getLevenshteinDistance(qWord, tWord) <= threshold) {
+                        wordMatched = true;
+                        break;
+                    }
+                }
+            }
+            if (!wordMatched) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // Documents search
     @GetMapping("/documents")
     public ResponseEntity<?> searchDocuments(
@@ -376,6 +448,8 @@ public class DocumentController {
             @RequestParam(required = false) String updated_after,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "20") int size) {
+
+        Set<String> fuzzySuggestions = Collections.synchronizedSet(new LinkedHashSet<>());
 
         List<Document> allDocs = documentRepository.findAll();
         List<Map<String, Object>> filtered = allDocs.stream()
@@ -428,7 +502,8 @@ public class DocumentController {
                     // Full-text search with synonyms
                     if (q != null && !q.isBlank()) {
                         List<String> queryVariants = getSearchVariants(q);
-                        String nameLower = ((String) doc.get("name")).toLowerCase();
+                        String name = (String) doc.get("name");
+                        String nameLower = name.toLowerCase();
                         String descLower = ((String) doc.get("description")).toLowerCase();
                         @SuppressWarnings("unchecked")
                         List<String> docTags = (List<String>) doc.get("tags");
@@ -440,6 +515,12 @@ public class DocumentController {
                             if (nameLower.contains(variant) || descLower.contains(variant) || tagsLower.contains(variant)) {
                                 matchFound = true;
                                 break;
+                            }
+                        }
+                        if (!matchFound) {
+                            if (isFuzzyMatch(q, name)) {
+                                matchFound = true;
+                                fuzzySuggestions.add(name);
                             }
                         }
                         if (!matchFound) {
@@ -461,6 +542,7 @@ public class DocumentController {
                 suggestions.add("Шаблон протокола ГЭК для ГИА");
             }
         }
+        suggestions.addAll(fuzzySuggestions);
 
         int totalElements = filtered.size();
         int totalPages = (int) Math.ceil((double) totalElements / size);
