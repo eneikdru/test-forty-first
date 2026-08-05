@@ -1,0 +1,12 @@
+{
+  "testsRun": 7,
+  "testsPassed": 7,
+  "testsFailed": 0,
+  "acceptanceCriteriaVerified": [
+    "Given a unit test environment with a mocked GitHub client, When the terminal state transition occurs, Then the test asserts the PR close endpoint is called.",
+    "Given an integration test environment, When a task lifecycle reaches a terminal state, Then the API contract for closing PRs is correctly executed."
+  ],
+  "coverageDeltaPercent": 0.0,
+  "verdict": "pass",
+  "notes": "Verified automatic PR closure integration in both unit and integration tests successfully. No regressions found."
+}
