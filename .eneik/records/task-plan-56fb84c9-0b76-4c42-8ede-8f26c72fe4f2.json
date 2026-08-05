@@ -1,0 +1,111 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "0f1ab2ff-2a45-4a15-a215-7c5bbc3a08fa",
+      "sourceIndex": 0,
+      "sixSigmaMetric": "reduce codebase compliance violations from 10 to 0",
+      "tocConstraintRef": "technical-debt-accumulation",
+      "requirements": [
+        "R1: Extract hardcoded magic strings (e.g. email, UUID) into named constants in DocumentController.java",
+        "R2: Remove hardcoded PII and secret mocked JWT token from DocumentController.java",
+        "R3: Implement proper error logging and handling for IOException in serializeMetadata in DocumentController.java",
+        "R4: Replace fake success in /auth/login with real authentication logic",
+        "R5: Wire the frontend PDF/DOCX download buttons to make real backend requests",
+        "R6: Wire the frontend postComment and sendActualizationRequest functions to make real backend API calls",
+        "R7: Separate procedural file I/O operations from HTTP routing logic into a service layer",
+        "R8: Remove non-Russian text from the frontend UI",
+        "R9: Patch the backend to integrate with the already-existing export endpoints for PDF/DOCX",
+        "R10: Patch the backend to use the already-existing endpoints and database models for comments and actualization requests"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Direct Code Patch",
+          "roleTag": "BARCAN-TAG-00",
+          "jtbd": "When implementing the patches for this epic, I want to wire existing models/APIs and remove hardcoded strings/PII, so that the existing implementation meets the required standards without new layers.",
+          "acceptanceCriteria": "Given a document controller, When accessed, Then magic strings and PII are not hardcoded.\nGiven a frontend UI, When interacted with, Then it triggers existing backend calls and displays only Russian text.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "backend-routing-coupling",
+          "sixSigmaMetric": "reduce unhandled IOExceptions from 1 to 0",
+          "hasUi": true,
+          "requirementRefs": [
+            "R1",
+            "R2",
+            "R3",
+            "R4",
+            "R5",
+            "R6",
+            "R7",
+            "R8",
+            "R9",
+            "R10"
+          ]
+        },
+        {
+          "title": "QA Epic Verification",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When verifying this epic, I want to ensure all patched code works across the test pyramid, so that regressions are caught early.",
+          "acceptanceCriteria": "Given the test suite, When run, Then unit tests verify the separated IO logic.\nGiven the E2E tests, When run, Then the user can successfully download a PDF and submit a comment using the patched integration.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "unverified-refactoring",
+          "sixSigmaMetric": "increase test coverage of DocumentController from 0% to 80%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1",
+            "R2",
+            "R3",
+            "R4",
+            "R5",
+            "R6",
+            "R7",
+            "R8",
+            "R9",
+            "R10"
+          ]
+        }
+      ]
+    },
+    {
+      "existingEpicId": "9ee092c2-261d-4e6f-9fe4-3fef14c32365",
+      "sourceIndex": 0,
+      "sixSigmaMetric": "reduce fake data transmissions from 1 to 0",
+      "tocConstraintRef": "unreliable-analytics-sync",
+      "requirements": [
+        "R11: Implement real data transmission in sendAnalyticsExport in DefaultEiosClient.java using a new HTTP client layer"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "EIOS HTTP Client Layer",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing data transmission for this epic, I want to create a real HTTP client layer, so that analytics can be successfully sent to the remote EIOS URL.",
+          "acceptanceCriteria": "Given an analytics export job, When triggered, Then data is transmitted via the new HTTP client layer to the remote URL.\nGiven a missing eiosApiUrl, When triggered, Then the HTTP client layer fails explicitly.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "fake-analytics-transmission",
+          "sixSigmaMetric": "reduce fake export completions from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R11"
+          ]
+        },
+        {
+          "title": "QA Analytics Sync",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When verifying this epic, I want to ensure the new HTTP client layer functions correctly under real conditions, so that data loss is prevented.",
+          "acceptanceCriteria": "Given integration tests, When run, Then they verify successful transmission via the HTTP client to a mock EIOS server.\nGiven invalid configuration, When run, Then the system throws the expected exception.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "unverified-analytics-export",
+          "sixSigmaMetric": "increase integration test coverage of DefaultEiosClient from 0% to 100%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R11"
+          ]
+        }
+      ]
+    }
+  ]
+}
