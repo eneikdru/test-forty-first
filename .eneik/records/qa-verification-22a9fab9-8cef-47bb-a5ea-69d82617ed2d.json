@@ -1,0 +1,13 @@
+{
+  "testsRun": 4,
+  "testsPassed": 4,
+  "testsFailed": 0,
+  "acceptanceCriteriaVerified": [
+    "Given a mocked GitHub client and a task with an open PR",
+    "When the task is transitioned to closed_terminal_task",
+    "Then the test must assert that the GitHub PR close method was called exactly once"
+  ],
+  "coverageDeltaPercent": null,
+  "verdict": "pass",
+  "notes": "Verified automatic PR closure on terminal task state. Implemented new mockito-based unit test suite ProjectTaskServicePrClosureTest verifying that transitioning a task with an open PR to closed_terminal_task calls the GitHub PR close method exactly once. All unit and integration tests are fully passing."
+}
