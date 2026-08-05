@@ -236,3 +236,14 @@ def test_student_search_financial_document_denied_and_economist_granted(page):
 
     # Verify that the budget document IS visible and accessible to Economist
     assert page.get_by_role("heading", name="Бюджетный план образовательного центра на 2026 год").is_visible()
+
+
+def test_russian_ui_presence(page):
+    # Navigate to the frontend dev server
+    page.goto("http://localhost:3000")
+    page.wait_for_timeout(1000)
+
+    # Check key Russian text presence to confirm the strictly Russian UI works correctly
+    assert page.locator("text=ДокументПоиск").is_visible()
+    assert page.locator("text=Образовательный центр").is_visible()
+    assert page.locator("text=База знаний ФБУН ЦНИИ Эпидемиологии").is_visible()

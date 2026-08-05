@@ -29,11 +29,31 @@ public class FileStorageService {
             throw new IllegalArgumentException("File cannot be empty");
         }
         String originalFilename = file.getOriginalFilename();
-        String savedFilePath = UPLOAD_DIR + "/" + UUID.randomUUID() + "_" + originalFilename;
-        byte[] bytes = file.getBytes();
+        if (originalFilename == null) {
+            originalFilename = "file";
+        }
+
+        // Strict validation: reject any path traversal attempts or directory characters
+        if (originalFilename.contains("..") || originalFilename.contains("/") || originalFilename.contains("\\")) {
+            throw new IllegalArgumentException("Invalid file name containing forbidden path characters: " + originalFilename);
+        }
+
+        Path originalPath = Paths.get(originalFilename);
+        String cleanedFilename = originalPath.getFileName().toString();
+
+        String savedFilePath = UPLOAD_DIR + "/" + UUID.randomUUID() + "_" + cleanedFilename;
         Path path = Paths.get(savedFilePath);
-        Files.write(path, bytes);
-        log.info("[FileStorageService] File saved successfully to {}", savedFilePath);
+
+        // Explicit check: resolved path must start with the UPLOAD_DIR prefix
+        Path absoluteUploadDirPath = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+        Path absoluteDestPath = path.toAbsolutePath().normalize();
+        if (!absoluteDestPath.startsWith(absoluteUploadDirPath)) {
+            throw new SecurityException("Directory traversal attempt detected: " + originalFilename);
+        }
+
+        byte[] bytes = file.getBytes();
+        Files.write(absoluteDestPath, bytes);
+        log.info("[FileStorageService] File saved successfully to {}", absoluteDestPath);
         return savedFilePath;
     }
 }

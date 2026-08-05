@@ -328,6 +328,9 @@ public class DocumentController {
         String savedFilePath;
         try {
             savedFilePath = fileStorageService.saveFile(file);
+        } catch (IllegalArgumentException | SecurityException e) {
+            log.warn("[DocumentController] Invalid or malicious filename detected: {}", file.getOriginalFilename(), e);
+            return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", e.getMessage()));
         } catch (IOException e) {
             log.error("[DocumentController] Failed to save uploaded file: {}", file.getOriginalFilename(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -415,6 +418,9 @@ public class DocumentController {
                 savedFilePath = fileStorageService.saveFile(file);
                 metaMap.put("fileSize", file.getSize());
                 metaMap.put("fileType", file.getContentType() != null ? file.getContentType() : "application/octet-stream");
+            } catch (IllegalArgumentException | SecurityException e) {
+                log.warn("[DocumentController] Invalid or malicious filename detected on update: {}", file.getOriginalFilename(), e);
+                return ResponseEntity.badRequest().body(Map.of("error", "BAD_REQUEST", "message", e.getMessage()));
             } catch (IOException e) {
                 log.error("[DocumentController] Failed to save updated file: {}", file.getOriginalFilename(), e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
