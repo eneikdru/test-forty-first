@@ -1,0 +1,176 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "6f3138d6-4c0d-4391-a610-4b0b3c98953b",
+      "sixSigmaMetric": "reduce failed offline access attempts from 1 to 0",
+      "tocConstraintRef": "offline document accessibility",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Implement PDF and DOCX document export endpoints"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Implement Document Export Endpoint",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the export endpoint for this epic, I want the backend controller to stream the document in PDF or DOCX format, so that offline access capabilities are enabled.",
+          "acceptanceCriteria": "Given a valid document exists in the database\nWhen an authenticated user requests the export endpoint\nThen the server streams the document with the correct PDF/DOCX content type",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "backend export endpoint availability",
+          "sixSigmaMetric": "reduce failed PDF/DOCX export HTTP requests from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "QA Document Export Endpoint",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When verifying the export endpoint for this epic, I want to ensure the response streams correctly, so that users receive valid PDF and DOCX files.",
+          "acceptanceCriteria": "Given a mocked document in the database\nWhen the export endpoint is called via integration test\nThen the binary content matches the source document and headers are valid",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "export feature test coverage",
+          "sixSigmaMetric": "increase export feature test coverage from 0 to 100%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    },
+    {
+      "existingEpicId": null,
+      "title": "Knowledge Base Statistics and Analytics Reporting",
+      "jtbd": "When an Administrator wants to analyze the usage of the knowledge base, I want to retrieve compiled reports of popular search queries, document views, and download statistics, so that we can optimize educational materials and monitor compliance.",
+      "kanoClass": "Performance",
+      "cynefinDomain": "complicated",
+      "sixSigmaMetric": "reduce time to compile usage statistics from hours to under 2 seconds",
+      "tocConstraintRef": "administrator visibility into platform usage",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Implement stats retrieval endpoint for usage analytics"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Implement Analytics Reporting Endpoint",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the analytics endpoint for this epic, I want to compile and return usage statistics, so that administrators can access accurate reports.",
+          "acceptanceCriteria": "Given recorded user analytics exist in the database\nWhen an Administrator requests the statistics report endpoint\nThen the server returns a structured report of queries, views, and downloads",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "analytics data aggregation",
+          "sixSigmaMetric": "reduce missing analytics endpoint errors from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "QA Analytics Reporting Endpoint",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When testing the analytics endpoint for this epic, I want to verify the correctness of the aggregated statistics, so that reports contain reliable data.",
+          "acceptanceCriteria": "Given a seeded database with known search queries and document views\nWhen the statistics endpoint is called\nThen the returned JSON report exactly matches the expected aggregated counts",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "analytics reporting test coverage",
+          "sixSigmaMetric": "increase analytics test coverage from 0 to 100%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    },
+    {
+      "existingEpicId": null,
+      "title": "System Backup and Database Archive Utility",
+      "jtbd": "When the system faces a hardware failure or data corruption, I want to be able to create and download complete backups of the database, metadata, and physical files, so that we can restore the knowledge base and avoid data loss.",
+      "kanoClass": "Must-Be",
+      "cynefinDomain": "complicated",
+      "sixSigmaMetric": "reduce full backup generation time from hours to under 5 minutes",
+      "tocConstraintRef": "disaster recovery data availability",
+      "sourceIndex": 1,
+      "requirements": [
+        "R1: Implement database, metadata, and file archival endpoint"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Implement System Backup Endpoint",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When building the backup endpoint for this epic, I want to compile the SQL schema, seed data, and documents into a compressed archive, so that secure backups can be exported.",
+          "acceptanceCriteria": "Given an authenticated Administrator\nWhen they trigger the backup endpoint\nThen the system compiles the database and files into a timestamped compressed archive and streams it",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "database and file aggregation logic",
+          "sixSigmaMetric": "reduce backup unavailability from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "QA System Backup Endpoint",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When testing the backup endpoint for this epic, I want to verify the contents of the generated archive, so that we ensure no data is lost during export.",
+          "acceptanceCriteria": "Given a mocked file system and database state\nWhen the backup endpoint is triggered\nThen the returned compressed archive contains the correct SQL dump and physical files",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "backup functionality test coverage",
+          "sixSigmaMetric": "increase backup feature test coverage from 0 to 100%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    },
+    {
+      "existingEpicId": null,
+      "title": "Fuzzy Search and Typo Correction Support",
+      "jtbd": "When a user enters a search query with spelling errors or typos, I want the system to match relevant documents and auto-correct or suggest correction terms, so that the search process is efficient and user-friendly.",
+      "kanoClass": "Attractive",
+      "cynefinDomain": "complex",
+      "sixSigmaMetric": "reduce zero-result searches due to typos from 15% to 0%",
+      "tocConstraintRef": "search query matching flexibility",
+      "sourceIndex": 2,
+      "requirements": [
+        "R1: Implement fuzzy matching and typo correction in backend search route"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Implement Fuzzy Search in Backend",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When updating the search route for this epic, I want to integrate Levenshtein distance or fuzzy matching, so that typo-tolerant document results are returned.",
+          "acceptanceCriteria": "Given a document titled 'Положение о практике' exists\nWhen a user searches for 'Полажение о практик'\nThen the search returns the matching document and provides a spelling correction hint",
+          "leanValue": "essential",
+          "cynefinDomain": "complex",
+          "tocConstraintRef": "backend search algorithm",
+          "sixSigmaMetric": "reduce unmatched typo queries from 1 to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        },
+        {
+          "title": "QA Fuzzy Search and Typo Correction",
+          "roleTag": "BARCAN-TAG-06",
+          "jtbd": "When verifying the search route for this epic, I want to ensure fuzzy matching accurately returns relevant documents, so that typo-tolerant search works as expected.",
+          "acceptanceCriteria": "Given a seeded database with known document titles\nWhen search queries with defined typos are sent to the endpoint\nThen the system returns the correct documents and correction hints",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "fuzzy search test coverage",
+          "sixSigmaMetric": "increase fuzzy search test coverage from 0 to 100%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
