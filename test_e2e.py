@@ -11,7 +11,10 @@ def playwright_instance():
 
 @pytest.fixture(scope="module")
 def browser(playwright_instance):
-    browser = playwright_instance.chromium.launch(headless=True)
+    browser = playwright_instance.chromium.launch(
+        headless=True,
+        args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-gpu", "--disable-dev-shm-usage"]
+    )
     yield browser
     browser.close()
 
@@ -236,3 +239,50 @@ def test_student_search_financial_document_denied_and_economist_granted(page):
 
     # Verify that the budget document IS visible and accessible to Economist
     assert page.get_by_role("heading", name="Бюджетный план образовательного центра на 2026 год").is_visible()
+
+
+def test_document_feedback_integration(page):
+    # Listen to console messages and errors
+    page.on("console", lambda msg: print(f"CONSOLE: {msg.type}: {msg.text}"))
+    page.on("pageerror", lambda err: print(f"PAGEERROR: {err}"))
+
+    # Navigate to frontend dev server
+    page.goto("http://localhost:3000")
+    page.wait_for_timeout(1000)
+
+    # Login as Administrator
+    page.select_option("#role", "Administrator")
+    page.get_by_role("button", name="Войти в систему").click()
+    page.wait_for_timeout(1000)
+
+    # Select document ФГОС ВО по специальности Эпидемиология
+    page.get_by_role("button", name="Просмотреть подробности документа ФГОС ВО по специальности Эпидемиология").click()
+    page.wait_for_timeout(1000)
+
+    # Check for comments section and write a comment
+    comment_input = page.get_by_placeholder("Напишите ваш комментарий или вопрос по материалу...")
+    assert comment_input.is_visible()
+
+    unique_comment_text = "Интеграционный комментарий " + str(page.evaluate("Date.now()"))
+    comment_input.fill(unique_comment_text)
+
+    # Click send/submit comment using its unique ID
+    page.locator("#submit-comment-btn").click()
+    page.wait_for_timeout(1000)
+
+    # Verify new comment is displayed in the UI
+    assert page.locator(f"text={unique_comment_text}").is_visible()
+
+    # Now let's try actualization request
+    actualization_input = page.get_by_placeholder("Укажите причину актуализации (например, Приказ №124)...")
+    assert actualization_input.is_visible()
+
+    unique_reason = "Причина для актуализации " + str(page.evaluate("Date.now()"))
+    actualization_input.fill(unique_reason)
+
+    # Submit request using its unique ID
+    page.locator("#submit-actualization-btn").click()
+    page.wait_for_timeout(1000)
+
+    # Verify success message is shown
+    assert page.locator("text=Запрос на актуализацию успешно отправлен").is_visible()
