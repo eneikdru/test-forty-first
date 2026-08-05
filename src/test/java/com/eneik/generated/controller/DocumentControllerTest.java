@@ -142,6 +142,34 @@ public class DocumentControllerTest {
     }
 
     @Test
+    public void testFuzzySearchWithSpellingErrorsAndSuggestions() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "practice.pdf", "application/pdf", "Practice Content".getBytes()
+        );
+
+        // Upload a document titled "Положение о практике"
+        mockMvc.perform(multipart("/api/v1/documents")
+                        .file(file)
+                        .param("name", "Положение о практике")
+                        .param("description", "Правила проведения практики в образовательном центре")
+                        .param("doc_type", "Regulations")
+                        .param("specialty", "Epidemiology")
+                        .param("edu_level", "Residency")
+                        .param("category_id", "edu_center_root")
+                        .header("Authorization", "Bearer " + generateTestJwt("ivan.ivanov@epidem.ru")))
+                .andExpect(status().isCreated());
+
+        // Search for 'Полажение о практик' (with typos) with suggestions enabled
+        mockMvc.perform(get("/api/v1/documents")
+                        .param("q", "Полажение о практик")
+                        .param("suggest", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Положение о практике"))
+                .andExpect(jsonPath("$.suggestions[0]").value("Положение о практике"));
+    }
+
+    @Test
     public void testSynonymSearchUnderTwoSeconds() throws Exception {
         // Prepare some mock documents with synonyms and abbreviations
         MockMultipartFile file = new MockMultipartFile(
